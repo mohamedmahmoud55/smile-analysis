@@ -33,10 +33,10 @@ This is a demo/portfolio deployment, not a production clinical system. Do not en
 2. Publish the web project:
 
    ```powershell
-   dotnet publish .\SmileAnalysisPl\SmileAnalysisPl.csproj --configuration Release --output .\publish
+   dotnet publish .\SmileAnalysisPl\SmileAnalysisPl.csproj --configuration Release --runtime win-x64 --self-contained false --output .\publish\win-x64
    ```
 
-3. Upload the contents of `publish` to the website's application root using the host's supported deployment method.
+3. Upload the contents of `publish\win-x64` to the website's application root using the host's supported deployment method. This Windows-specific framework-dependent publish avoids bundling Linux/macOS runtimes. Local member profile images are excluded from publishing.
 4. Configure these settings in the hosting control panel or on the host (never commit credentials to GitHub):
    - `ASPNETCORE_ENVIRONMENT=Production`
    - `ConnectionStrings__DefaultConnection` with the host-provided SQL Server connection string
