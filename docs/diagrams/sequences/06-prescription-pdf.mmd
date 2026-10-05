@@ -1,0 +1,43 @@
+sequenceDiagram
+    actor Doctor
+    participant Browser
+    participant MVC as PrescriptionController
+    participant RxSvc as PrescriptionService
+    participant PdfSvc as PrescriptionPdfService
+    participant UoW as UnitOfWork
+    participant DB as SQL Server
+
+    Doctor->>Browser: Open Prescription/Create(appointmentId)
+    Browser->>MVC: GET Create
+    MVC->>MVC: CanManageAppointmentAsync
+    MVC->>RxSvc: GetCreateForm(appointmentId)
+    RxSvc->>DB: SELECT Appointment Patient Doctor
+    RxSvc-->>MVC: PrescriptionFormViewModel
+    MVC-->>Browser: Prescription form
+
+    Doctor->>Browser: Add medication items and notes
+    Browser->>MVC: POST Create
+    MVC->>MVC: Validate and filter empty items
+    MVC->>RxSvc: CreatePrescription(model)
+    RxSvc->>UoW: Add Prescription
+    RxSvc->>UoW: Add PrescriptionItems
+    UoW->>DB: INSERT Prescriptions PrescriptionItems
+    DB-->>RxSvc: prescription Id
+    RxSvc-->>MVC: success
+    MVC-->>Browser: Redirect Details
+
+    Doctor->>Browser: Open Prescription/Details
+    Browser->>MVC: GET Details(appointmentId)
+    MVC->>RxSvc: GetDetails(appointmentId)
+    RxSvc->>DB: SELECT Prescription with Items
+    RxSvc-->>MVC: PrescriptionDetailsViewModel
+    MVC-->>Browser: Details view
+
+    Doctor->>Browser: Click Download PDF
+    Browser->>MVC: GET DownloadPdf(appointmentId)
+    MVC->>PdfSvc: GeneratePdf(appointmentId)
+    PdfSvc->>RxSvc: Load prescription data
+    PdfSvc->>PdfSvc: Render QuestPDF document
+    PdfSvc-->>MVC: byte array PDF
+    MVC-->>Browser: FileResult application/pdf
+    Browser-->>Doctor: Prescription PDF download

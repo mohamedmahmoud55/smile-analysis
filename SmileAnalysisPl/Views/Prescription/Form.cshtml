@@ -1,0 +1,184 @@
+@model SmileAnalysisBl.ViewModels.PrescriptionViewModels.PrescriptionFormViewModel
+@{
+    ViewData["Title"] = Model.IsEdit ? "Edit prescription" : "New prescription";
+    var formAction = Model.IsEdit ? "Edit" : "Create";
+}
+
+<div class="cc-page">
+    <div class="mb-4">
+        <a asp-controller="Doctor" asp-action="MySchedule" class="text-decoration-none small text-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to schedule
+        </a>
+        <h2 class="h4 fw-bold text-dark mt-2 mb-1">@(Model.IsEdit ? "Edit prescription" : "Create prescription")</h2>
+        <p class="text-secondary small mb-0">Add medications and clinical notes for this appointment.</p>
+    </div>
+
+    @if (TempData["SuccessMessage"] is string success)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @success
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] is string error)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @error
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <form asp-action="@formAction" method="post" id="prescription-form">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="PrescriptionId" />
+        <input type="hidden" asp-for="AppointmentId" />
+        <input type="hidden" asp-for="IsEdit" />
+
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small" role="alert"></div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-12 col-lg-4">
+                <div class="cc-bento-card p-4 h-100">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <div class="p-2 rounded-3 bg-primary-subtle text-primary">
+                            <i class="bi bi-person fs-5"></i>
+                        </div>
+                        <h3 class="cc-form-section-title mb-0">Patient</h3>
+                    </div>
+                    <p class="fw-bold text-dark mb-1">@Model.PatientName</p>
+                    <p class="small text-secondary mb-0">@Model.PatientDisplayId</p>
+                </div>
+            </div>
+            <div class="col-12 col-lg-4">
+                <div class="cc-bento-card p-4 h-100">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <div class="p-2 rounded-3 bg-success-subtle text-success">
+                            <i class="bi bi-heart-pulse fs-5"></i>
+                        </div>
+                        <h3 class="cc-form-section-title mb-0">Doctor</h3>
+                    </div>
+                    <p class="fw-bold text-dark mb-1">@Model.DoctorName</p>
+                    <p class="small text-secondary mb-0">Assigned physician</p>
+                </div>
+            </div>
+            <div class="col-12 col-lg-4">
+                <div class="cc-bento-card p-4 h-100">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <div class="p-2 rounded-3 bg-warning-subtle text-warning-emphasis">
+                            <i class="bi bi-calendar-event fs-5"></i>
+                        </div>
+                        <h3 class="cc-form-section-title mb-0">Appointment</h3>
+                    </div>
+                    <p class="fw-bold text-dark mb-1">@Model.AppointmentDate.ToString("MMMM dd, yyyy")</p>
+                    <p class="small text-secondary mb-0">@Model.AppointmentDate.ToString("h:mm tt") · @Model.AppointmentStatus</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="cc-bento-card p-4 mb-4">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                <div>
+                    <h3 class="cc-form-section-title mb-1">Medications</h3>
+                    <p class="small text-secondary mb-0">Add one or more medications. Use the + button to add rows.</p>
+                </div>
+                <button type="button" class="btn btn-sm cc-btn-primary" id="add-medication-btn">
+                    <i class="bi bi-plus-lg me-1"></i>Add medication
+                </button>
+            </div>
+
+            <div id="medications-container">
+                @for (var i = 0; i < Model.Items.Count; i++)
+                {
+                    <div class="rx-medication-row border rounded-3 p-3 mb-3 bg-white" data-index="@i">
+                        <input type="hidden" asp-for="Items[i].Id" />
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge bg-primary-subtle text-primary rx-row-label">Medication @(i + 1)</span>
+                            <button type="button" class="btn btn-link btn-sm text-danger p-0 rx-remove-btn" title="Remove" @(Model.Items.Count <= 1 ? "disabled" : null)>
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                <label asp-for="Items[i].MedicationName" class="form-label fw-semibold small"></label>
+                                <input asp-for="Items[i].MedicationName" class="form-control" placeholder="e.g. Amoxicillin" />
+                                <span asp-validation-for="Items[i].MedicationName" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12 col-md-3">
+                                <label asp-for="Items[i].Dosage" class="form-label fw-semibold small"></label>
+                                <input asp-for="Items[i].Dosage" class="form-control" placeholder="e.g. 500mg" />
+                                <span asp-validation-for="Items[i].Dosage" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12 col-md-3">
+                                <label asp-for="Items[i].Duration" class="form-label fw-semibold small"></label>
+                                <input asp-for="Items[i].Duration" class="form-control" placeholder="e.g. 7 days" />
+                                <span asp-validation-for="Items[i].Duration" class="text-danger small"></span>
+                            </div>
+                            <div class="col-12">
+                                <label asp-for="Items[i].Instructions" class="form-label fw-semibold small"></label>
+                                <input asp-for="Items[i].Instructions" class="form-control" placeholder="e.g. Take after meals" />
+                                <span asp-validation-for="Items[i].Instructions" class="text-danger small"></span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="cc-bento-card p-4 mb-4">
+            <h3 class="cc-form-section-title mb-3">Notes</h3>
+            <label asp-for="Notes" class="form-label fw-semibold small"></label>
+            <textarea asp-for="Notes" class="form-control" rows="4" placeholder="Additional clinical notes or instructions for the patient..."></textarea>
+            <span asp-validation-for="Notes" class="text-danger small"></span>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+            <button type="submit" class="btn cc-btn-primary" id="save-prescription-btn">
+                <span class="rx-btn-text"><i class="bi bi-check-lg me-1"></i>Save prescription</span>
+                <span class="rx-btn-loading d-none"><span class="spinner-border spinner-border-sm me-1"></span>Saving...</span>
+            </button>
+            @if (Model.IsEdit)
+            {
+                <a asp-action="Details" asp-route-appointmentId="@Model.AppointmentId" class="btn btn-outline-secondary">Cancel</a>
+            }
+            else
+            {
+                <a asp-controller="Doctor" asp-action="MySchedule" class="btn btn-outline-secondary">Cancel</a>
+            }
+        </div>
+    </form>
+</div>
+
+<template id="medication-row-template">
+    <div class="rx-medication-row border rounded-3 p-3 mb-3 bg-white" data-index="__INDEX__">
+        <input type="hidden" name="Items[__INDEX__].Id" value="" />
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="badge bg-primary-subtle text-primary rx-row-label">Medication __NUMBER__</span>
+            <button type="button" class="btn btn-link btn-sm text-danger p-0 rx-remove-btn" title="Remove">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+        <div class="row g-3">
+            <div class="col-12 col-md-6">
+                <label class="form-label fw-semibold small">Medication</label>
+                <input name="Items[__INDEX__].MedicationName" class="form-control" placeholder="e.g. Amoxicillin" />
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="form-label fw-semibold small">Dosage</label>
+                <input name="Items[__INDEX__].Dosage" class="form-control" placeholder="e.g. 500mg" />
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="form-label fw-semibold small">Duration</label>
+                <input name="Items[__INDEX__].Duration" class="form-control" placeholder="e.g. 7 days" />
+            </div>
+            <div class="col-12">
+                <label class="form-label fw-semibold small">Instructions</label>
+                <input name="Items[__INDEX__].Instructions" class="form-control" placeholder="e.g. Take after meals" />
+            </div>
+        </div>
+    </div>
+</template>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script src="~/js/prescription-form.js" asp-append-version="true"></script>
+}

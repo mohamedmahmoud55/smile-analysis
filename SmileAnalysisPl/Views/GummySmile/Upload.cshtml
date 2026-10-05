@@ -1,0 +1,154 @@
+@model SmileAnalysisBl.ViewModels.GummySmileViewModels.GummySmileUploadViewModel
+@{
+    ViewData["Title"] = "Upload Images";
+}
+
+<div class="cc-page">
+    <div class="pa-analysis-header">
+        <a asp-controller="Patient" asp-action="Details" asp-route-id="@Model.PatientId" class="pa-back-btn" title="Back to patient">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div class="flex-grow-1">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                <h1 class="h4 fw-bold text-dark mb-0">Gummy Smile Analysis</h1>
+                <span class="pa-ai-badge"><i class="bi bi-stars"></i> AI Powered</span>
+            </div>
+            <p class="text-secondary small mb-0">@Model.PatientName · @Model.DisplayId</p>
+        </div>
+    </div>
+
+    <partial name="_WizardSteps" model="Model" />
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @Model.ErrorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <form asp-action="Upload" asp-route-id="@Model.LocalCaseId" method="post" enctype="multipart/form-data" id="gs-upload-form">
+        @Html.AntiForgeryToken()
+
+        <div class="row g-4">
+            <div class="col-12 col-lg-8">
+                <div class="cc-bento-card p-4">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <div class="p-2 rounded-3 bg-primary-subtle text-primary">
+                            <i class="bi bi-images fs-5"></i>
+                        </div>
+                        <div>
+                            <h2 class="cc-form-section-title mb-0">Step 1 — Upload photos</h2>
+                            <p class="text-secondary small mb-0 mt-1">Both images are required before AI analysis can run.</p>
+                        </div>
+                    </div>
+
+                    <div class="row g-4 mt-1">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-semibold small d-flex align-items-center gap-2 mb-2">
+                                Rest photo
+                                <span class="cc-badge-blue">Required</span>
+                            </label>
+                            <div class="pa-upload-zone" data-preview-target="previewRest" data-file-label="restFileName">
+                                <input type="file" name="restImage" accept="image/*" required aria-label="Upload rest photo" />
+                                <div class="pa-upload-placeholder text-center">
+                                    <div class="pa-upload-icon mx-auto"><i class="bi bi-person"></i></div>
+                                    <div class="pa-upload-label">Rest photo</div>
+                                    <div class="pa-upload-hint">Click or drag to upload</div>
+                                </div>
+                            </div>
+                            <p class="small text-secondary mb-0 mt-2">
+                                <i class="bi bi-info-circle me-1"></i>Lips at rest, face relaxed, good lighting.
+                            </p>
+                            <p class="small text-primary mb-0 mt-1 d-none" id="restFileName"></p>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-semibold small d-flex align-items-center gap-2 mb-2">
+                                Smile photo
+                                <span class="cc-badge-blue">Required</span>
+                            </label>
+                            <div class="pa-upload-zone" data-preview-target="previewSmile" data-file-label="smileFileName">
+                                <input type="file" name="smileImage" accept="image/*" required aria-label="Upload smile photo" />
+                                <div class="pa-upload-placeholder text-center">
+                                    <div class="pa-upload-icon mx-auto"><i class="bi bi-emoji-smile"></i></div>
+                                    <div class="pa-upload-label">Smile photo</div>
+                                    <div class="pa-upload-hint">Click or drag to upload</div>
+                                </div>
+                            </div>
+                            <p class="small text-secondary mb-0 mt-2">
+                                <i class="bi bi-info-circle me-1"></i>Full spontaneous smile, teeth and gums visible.
+                            </p>
+                            <p class="small text-primary mb-0 mt-1 d-none" id="smileFileName"></p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 mt-4 pt-2 border-top border-light">
+                        <button type="submit" class="btn cc-btn-primary d-inline-flex align-items-center gap-2 px-4">
+                            <i class="bi bi-cloud-upload"></i>
+                            Upload &amp; continue
+                        </button>
+                        <a asp-controller="Patient" asp-action="Details" asp-route-id="@Model.PatientId" class="btn btn-outline-secondary px-4">Cancel</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-4">
+                <div class="cc-bento-card p-4 mb-4">
+                    <h3 class="cc-form-section-title mb-3">Preview</h3>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <p class="small fw-semibold text-secondary mb-1">Rest</p>
+                            <div class="pa-preview-thumb" id="previewRest">
+                                <span>No image</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <p class="small fw-semibold text-secondary mb-1">Smile</p>
+                            <div class="pa-preview-thumb" id="previewSmile">
+                                <span>No image</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cc-bento-card p-4">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <div class="p-2 rounded-3 bg-warning-subtle text-warning-emphasis">
+                            <i class="bi bi-lightbulb fs-5"></i>
+                        </div>
+                        <h3 class="cc-form-section-title mb-0">Photo tips</h3>
+                    </div>
+                    <ul class="small text-secondary mb-0 ps-3">
+                        <li class="mb-2">Use front-facing photos with even lighting.</li>
+                        <li class="mb-2">Keep the same distance and angle for both shots.</li>
+                        <li class="mb-2">Avoid filters, sunglasses, or heavy makeup.</li>
+                        <li class="mb-0">JPEG or PNG, at least 800×800 px recommended.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/patient-analysis.js" asp-append-version="true"></script>
+    <script>
+        document.querySelectorAll('.pa-upload-zone input[type="file"]').forEach(function (input) {
+            input.addEventListener('change', function () {
+                var zone = input.closest('.pa-upload-zone');
+                var labelId = zone?.dataset.fileLabel;
+                var labelEl = labelId ? document.getElementById(labelId) : null;
+                if (!labelEl) return;
+                if (input.files && input.files[0]) {
+                    labelEl.textContent = input.files[0].name;
+                    labelEl.classList.remove('d-none');
+                } else {
+                    labelEl.textContent = '';
+                    labelEl.classList.add('d-none');
+                }
+            });
+        });
+    </script>
+}

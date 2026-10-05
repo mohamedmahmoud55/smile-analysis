@@ -1,0 +1,32 @@
+﻿@{
+    ViewData["Title"] = "Delete user";
+}
+
+<div class="cc-page">
+    <div class="mb-4">
+        <a asp-action="Index" class="text-decoration-none small text-secondary"><i class="bi bi-arrow-left me-1"></i>Back to users & roles</a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-5">
+            <div class="cc-bento-card p-4 text-center">
+                <div class="rounded-3 bg-danger bg-opacity-10 text-danger d-inline-flex align-items-center justify-content-center mb-3" style="width: 3.5rem; height: 3.5rem;">
+                    <i class="bi bi-person-x fs-3"></i>
+                </div>
+                <h2 class="h5 fw-bold text-dark mb-2">Delete user?</h2>
+                <p class="text-secondary small mb-3">This action cannot be undone. The account will be permanently removed.</p>
+
+                <div class="alert alert-warning text-start small py-2 mb-4" role="alert">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    Make sure this user no longer needs access to the system before confirming.
+                </div>
+
+                <form method="post" asp-action="DeleteConfirmed" class="d-flex flex-wrap gap-2 justify-content-center">
+                    <input type="hidden" readonly name="id" value="@ViewBag.AdminId" />
+                    <a asp-action="Index" class="btn btn-outline-secondary px-4">Cancel</a>
+                    <button type="submit" class="btn btn-danger px-4">Delete user</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

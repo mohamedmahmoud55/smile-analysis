@@ -1,0 +1,16 @@
+# Build and IDE output
+**/bin/
+**/obj/
+.vs/
+.idea/
+.vscode/
+
+# Local runtime data and potentially sensitive images
+SmileAnalysisPl/uploads/
+SmileAnalysisPl/wwwroot/images/members/
+
+# Local publishing output and OS metadata
+publish/
+__MACOSX/
+.DS_Store
+Thumbs.db

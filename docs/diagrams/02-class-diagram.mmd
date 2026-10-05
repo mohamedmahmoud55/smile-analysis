@@ -1,0 +1,307 @@
+classDiagram
+    direction TB
+
+    class BaseEntity {
+        <<abstract>>
+        +int Id
+        +DateTime CreatedAt
+        +DateTime UpdatedAt
+    }
+
+    %% ─── ASP.NET Identity ───
+    class ApplicationUser {
+        <<AspNetUsers>>
+        +string Id
+        +string FirstName
+        +string LastName
+        +string UserName
+        +string Email
+        +string PhoneNumber
+        +string PasswordHash
+        +ValidateUser(loginViewModel) ApplicationUser
+        +GetAllManagedUsers() IEnumerable
+        +CreateAdmin(model) IdentityResult
+        +GetAdminForUpdate(id) EditAdminViewModel
+        +EditAdmin(model) IdentityResult
+        +DeleteAdmin(id) IdentityResult
+        +ResetPassword(model) IdentityResult
+        +GetRoles(userId) ManageRolesViewModel
+    }
+
+    class IdentityRole {
+        <<AspNetRoles>>
+        +string Id
+        +string Name
+        +string NormalizedName
+        +AddRoleToUser(userId, roleName) IdentityResult
+        +RemoveRoleFromUser(userId, roleName) IdentityResult
+        +RoleExists(roleName) bool
+    }
+
+    class AspNetUserRole {
+        <<AspNetUserRoles>>
+        +string UserId
+        +string RoleId
+    }
+
+    %% ─── Domain entities with service methods ───
+    class Patient {
+        <<Entity>>
+        +int Id
+        +string FirstName
+        +string LastName
+        +Gender Gender
+        +DateTime DateOfBirth
+        +string Phone
+        +string Email
+        +GetAll() IEnumerable
+        +GetPatientRecordsPage(search) PatientRecordsPageViewModel
+        +GetPatientRecordsPageForDoctor(doctorId, search) PatientRecordsPageViewModel
+        +PatientHasAppointmentWithDoctor(patientId, doctorId) bool
+        +Create(model) bool
+        +GetForEdit(id) EditPatientViewModel
+        +GetPatientDetails(id) PatientDetailsPageViewModel
+        +GetGummySmileAnalysisPage(patientId) GummySmileAnalysisViewModel
+        +Update(model) bool
+        +TryDelete(id, out error) bool
+        +GetOrthoDashboard() OrthoDashboardViewModel
+        +GetAnalyticsData() AnalyticsViewModel
+    }
+
+    class PatientClinicalHistory {
+        <<Entity>>
+        +int Id
+        +int PatientId
+        +string ChronicDiseases
+        +string CurrentMedications
+        +string Allergies
+        +string PreviousSurgeries
+        +string HeartOrBleedingConditions
+        +DateTime LastDentalVisit
+        +string CurrentPainDetails
+        +string PreviousDentalTreatments
+        +string GumProblems
+        +string OralHabits
+        +GetByPatientId(patientId) PatientClinicalHistory
+        +CreateWithPatient(model) bool
+        +UpdateWithPatient(model) bool
+    }
+
+    class PatientBillingAccount {
+        <<Entity>>
+        +int Id
+        +int PatientId
+        +decimal BaseTreatmentCost
+        +decimal AdditionalCosts
+        +BillingDiscountType DiscountType
+        +decimal DiscountPercent
+        +decimal DiscountFixedAmount
+        +GetBillingPage(patientId) PatientBillingPageViewModel
+        +TrySaveBilling(model, out error) bool
+        +TryAddAdditionalCost(model, out error) bool
+        +TryResetBillingForNewCycle(patientId, out error) bool
+    }
+
+    class Doctor {
+        <<Entity>>
+        +int Id
+        +string FirstName
+        +string LastName
+        +string Specialty
+        +string LicenseNumber
+        +string Email
+        +string Phone
+        +DateOnly BirthDate
+        +string ApplicationUserId
+        +GetMedicalTeamPage(search) DoctorRecordsPageViewModel
+        +Create(model) bool
+        +GetDoctorForEdit(id) EditDoctorViewModel
+        +Update(model) bool
+        +TryDelete(id, out error) bool
+        +GetDoctorIdForApplicationUser(userId, email) int?
+        +GetDoctorSchedulePicker() DoctorSchedulePickerViewModel
+    }
+
+    class DoctorAvailability {
+        <<Entity>>
+        +int Id
+        +int DoctorId
+        +DayOfWeek DayOfWeek
+        +TimeOnly StartTime
+        +TimeOnly EndTime
+        +GetAvailabilityPage(doctorId) DoctorAvailabilityPageViewModel
+        +TryAddAvailability(model, out error) bool
+        +TryDeleteAvailability(doctorId, availabilityId, out error) bool
+        +GetAvailableSlotStarts(doctorId, date, duration, excludeId) IReadOnlyList
+    }
+
+    class Staff {
+        <<Entity>>
+        +int Id
+        +string FirstName
+        +string LastName
+        +string Email
+        +string Phone
+        +DateOnly BirthDate
+        +GetStaffRegistryPage(search) StaffRecordsPageViewModel
+        +Create(model) bool
+        +GetStaffForEdit(id) EditStaffViewModel
+        +Update(model) bool
+        +TryDelete(id, out error) bool
+    }
+
+    class Appointment {
+        <<Entity>>
+        +int Id
+        +int PatientId
+        +int DoctorId
+        +int StaffId
+        +DateTime AppointmentTime
+        +int DurationMinutes
+        +AppointmentStatus Status
+        +GetAll() IEnumerable
+        +GetDoctorSchedule(doctorId, rangeStart, rangeEnd) DoctorSchedulePageViewModel
+        +GetCreateForm(preselectPatientId) CreateAppointmentViewModel
+        +TryCreate(model, out error) bool
+        +GetForEdit(id) EditAppointmentViewModel
+        +TryUpdate(model, out error) bool
+        +TryCancel(id, out error) bool
+        +AppointmentExists(appointmentId) bool
+        +DoctorCanManageAppointment(doctorId, appointmentId) bool
+    }
+
+    class Payment {
+        <<Entity>>
+        +int Id
+        +int PatientId
+        +int AppointmentId
+        +decimal Amount
+        +DateTime PaymentDate
+        +PaymentMethod Method
+        +PaymentStatus Status
+        +TryRecordPayment(model, out error, out paymentId) bool
+        +GetPaymentReceipt(paymentId) PaymentReceiptViewModel
+    }
+
+    class Prescription {
+        <<Entity>>
+        +int Id
+        +int AppointmentId
+        +string Notes
+        +GetByAppointmentId(appointmentId) PrescriptionDetailsViewModel
+        +GetById(prescriptionId) PrescriptionDetailsViewModel
+        +GetCreateForm(appointmentId) PrescriptionFormViewModel
+        +GetEditForm(appointmentId) PrescriptionFormViewModel
+        +TryCreate(model, doctorId, isSuperAdmin, out error) bool
+        +TryUpdate(model, doctorId, isSuperAdmin, out error) bool
+        +TryDelete(prescriptionId, doctorId, isSuperAdmin, out error) bool
+        +HasPrescriptionForAppointment(appointmentId) bool
+        +GeneratePdf(prescriptionId) byte[]
+    }
+
+    class PrescriptionItem {
+        <<Entity>>
+        +int Id
+        +int PrescriptionId
+        +string MedicationName
+        +string Dosage
+        +string Duration
+        +string Instructions
+        +AddItem(prescriptionId, item) bool
+        +UpdateItem(prescriptionId, item) bool
+        +RemoveItem(prescriptionId, itemId) bool
+    }
+
+    class GummySmileCase {
+        <<Entity>>
+        +int Id
+        +int PatientId
+        +string GsCaseId
+        +string GsStatus
+        +string DiagnosisSummary
+        +string Severity
+        +string ReportJson
+        +byte[] ReportPdf
+        +string ClinicalDraftJson
+        +string ClinicalRequestJson
+        +string OverridesRequestJson
+        +string CaseSnapshotJson
+        +byte[] RestImage
+        +string RestImageContentType
+        +byte[] SmileImage
+        +string SmileImageContentType
+        +string CachedAssetsJson
+        +DateTime CompletedAt
+        +StartCaseAsync(patientId) Task~int~
+        +GetUploadPage(localCaseId) GummySmileUploadViewModel
+        +UploadImagesAsync(localCaseId, rest, smile) Task~bool~
+        +GetAnalyzePage(localCaseId) GummySmileAnalyzeViewModel
+        +RunAnalysisAsync(localCaseId) Task~bool~
+        +GetReviewPage(localCaseId) GummySmileReviewViewModel
+        +SubmitOverridesAsync(model) Task~bool~
+        +GetClinicalPage(localCaseId) GummySmileClinicalViewModel
+        +SaveClinicalDraftAsync(model) Task~bool~
+        +SubmitClinicalAsync(model) Task~bool~
+        +GetDiagnosisPageAsync(localCaseId) Task
+        +GetTreatmentPageAsync(localCaseId) Task
+        +GetAssetAsync(localCaseId, assetPath) Task
+        +GetReportPdfAsync(localCaseId) Task
+        +GetPatientAnalyses(patientId) IReadOnlyList
+    }
+
+    class XRayAnalysisCase {
+        <<Entity>>
+        +int Id
+        +int PatientId
+        +string Summary
+        +string CvmStage
+        +string SkeletalClass
+        +int LandmarkCount
+        +int ConfidencePercent
+        +byte[] PanoramicImage
+        +string PanoramicImageContentType
+        +byte[] CephImage
+        +string CephImageContentType
+        +string ResultsJson
+        +DateTime CompletedAt
+        +GetAnalysisPage(patientId, caseId) XRayAnalysisPageViewModel
+        +RunAnalysisAsync(patientId, panoramic, ceph, runDentalGemma) Task~int~
+        +GetPatientAnalyses(patientId) IReadOnlyList
+    }
+
+    %% ─── Inheritance ───
+    BaseEntity <|-- Patient
+    BaseEntity <|-- PatientClinicalHistory
+    BaseEntity <|-- PatientBillingAccount
+    BaseEntity <|-- Doctor
+    BaseEntity <|-- DoctorAvailability
+    BaseEntity <|-- Staff
+    BaseEntity <|-- Appointment
+    BaseEntity <|-- Payment
+    BaseEntity <|-- Prescription
+    BaseEntity <|-- PrescriptionItem
+    BaseEntity <|-- GummySmileCase
+    BaseEntity <|-- XRayAnalysisCase
+
+    %% ─── Identity relationships ───
+    ApplicationUser "1" --> "*" AspNetUserRole : userRoles
+    IdentityRole "1" --> "*" AspNetUserRole : roleUsers
+    ApplicationUser "1" --> "0..1" Doctor : linkedDoctor
+
+    %% ─── Domain relationships ───
+    Patient "1" --> "0..1" PatientClinicalHistory : clinicalHistory
+    Patient "1" --> "0..1" PatientBillingAccount : billingAccount
+    Patient "1" --> "*" Appointment : appointments
+    Patient "1" --> "*" Payment : payments
+    Patient "1" --> "*" GummySmileCase : gummySmileCases
+    Patient "1" --> "*" XRayAnalysisCase : xRayCases
+
+    Doctor "1" --> "*" DoctorAvailability : availabilities
+    Doctor "1" --> "*" Appointment : appointments
+
+    Staff "1" --> "*" Appointment : assists
+
+    Appointment "1" --> "0..1" Prescription : prescription
+    Appointment "1" --> "*" Payment : payments
+
+    Prescription "1" --> "*" PrescriptionItem : items

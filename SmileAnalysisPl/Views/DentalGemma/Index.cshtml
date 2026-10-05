@@ -1,0 +1,189 @@
+@model SmileAnalysisBl.ViewModels.DentalGemmaViewModels.DentalGemmaPageViewModel
+@{
+    ViewData["Title"] = "Dental AI Chat";
+    var result = Model.LastResult;
+    var audit = result?.Audit;
+    var hasResponse = result?.GeneralChat is not null;
+    var hasMessage = !string.IsNullOrWhiteSpace(Model.GeneralChatMessage);
+    var displayId = Model.PatientId is not null ? $"P-{Model.PatientId:0000}" : null;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/dental-ai-chat.css" asp-append-version="true" />
+}
+
+<div class="dg-chat-page">
+    <div class="dg-chat-header">
+        @if (Model.PatientId is not null)
+        {
+            <a asp-controller="Patient" asp-action="Details" asp-route-id="@Model.PatientId" class="pa-back-btn" title="Back to patient">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+        }
+        <div class="dg-chat-header-main">
+            <div class="dg-chat-title-row">
+                <h1 class="dg-chat-title">Dental AI Chat</h1>
+                <span class="pa-ai-badge"><i class="bi bi-stars"></i> DentalGemma</span>
+            </div>
+            <p class="dg-chat-subtitle">Educational support and clinical reasoning — not a substitute for professional diagnosis.</p>
+            @if (!string.IsNullOrEmpty(Model.PatientName))
+            {
+                <div class="dg-patient-chip">
+                    <i class="bi bi-person-circle"></i>
+                    <span>@Model.PatientName</span>
+                    @if (displayId is not null)
+                    {
+                        <span class="text-secondary">· @displayId</span>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger d-flex align-items-start gap-2 mb-3">
+            <i class="bi bi-exclamation-triangle-fill mt-1"></i>
+            <div>@Model.ErrorMessage</div>
+        </div>
+    }
+
+    <div class="dg-chat-shell">
+        <div class="dg-chat-thread" id="chatThread">
+            @if (!hasMessage && !hasResponse)
+            {
+                <div class="dg-chat-empty">
+                    <div class="dg-chat-empty-icon"><i class="bi bi-chat-heart"></i></div>
+                    <h2>Ask DentalGemma anything</h2>
+                    <p>Get clear explanations about dental topics, treatment concepts, and clinical reasoning.</p>
+                    <div class="dg-suggestions">
+                        <button type="button" class="dg-suggestion" data-prompt="Explain impacted canine treatment options simply.">
+                            Impacted canine options
+                        </button>
+                        <button type="button" class="dg-suggestion" data-prompt="What is CVM staging used for in orthodontics?">
+                            CVM staging
+                        </button>
+                        <button type="button" class="dg-suggestion" data-prompt="Describe Class II malocclusion in patient-friendly terms.">
+                            Class II explained
+                        </button>
+                    </div>
+                </div>
+            }
+            else
+            {
+                @if (hasMessage)
+                {
+                    <div class="dg-message dg-message--user">
+                        <div class="dg-message-avatar"><i class="bi bi-person-fill"></i></div>
+                        <div class="dg-message-body">
+                            <span class="dg-message-label">You</span>
+                            <div class="dg-message-bubble">@Model.GeneralChatMessage</div>
+                        </div>
+                    </div>
+                }
+
+                @if (hasResponse)
+                {
+                    <div class="dg-message dg-message--assistant">
+                        <div class="dg-message-avatar"><i class="bi bi-stars"></i></div>
+                        <div class="dg-message-body">
+                            <span class="dg-message-label">DentalGemma</span>
+                            <span class="dg-review-badge"><i class="bi bi-shield-check"></i> Clinician review required</span>
+                            <div class="dg-message-bubble">@result!.GeneralChat!.Answer</div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+
+        <form asp-action="Invoke" method="post" id="chatForm" class="dg-chat-composer">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="PatientId" />
+
+            <div class="dg-composer-inner">
+                <textarea asp-for="GeneralChatMessage"
+                          class="dg-composer-input"
+                          id="chatInput"
+                          rows="1"
+                          placeholder="Ask a dental question…"
+                          aria-label="Message"></textarea>
+                <button type="submit" class="dg-send-btn" id="sendBtn" title="Send message">
+                    <i class="bi bi-send-fill"></i>
+                </button>
+            </div>
+            <div class="dg-composer-hint">Press Enter to send · Shift+Enter for new line</div>
+        </form>
+
+        @if (audit is not null)
+        {
+            <button type="button" class="dg-audit-toggle" data-bs-toggle="collapse" data-bs-target="#auditPanel" aria-expanded="false">
+                <i class="bi bi-info-circle me-1"></i> Response details
+            </button>
+            <div class="collapse" id="auditPanel">
+                <div class="dg-audit-panel">
+                    <div class="dg-audit-item">
+                        <i class="bi bi-cpu"></i>
+                        <span>@audit.ModelId</span>
+                    </div>
+                    <div class="dg-audit-item">
+                        <i class="bi bi-shield"></i>
+                        <span class="@(audit.Safety.Safe ? "badge-safe" : "badge-flagged")">
+                            @(audit.Safety.Safe ? "Safety passed" : "Review flagged")
+                        </span>
+                    </div>
+                    @if (audit.Safety.ForbiddenHits.Any())
+                    {
+                        <div class="dg-audit-item text-danger">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <span>@string.Join(", ", audit.Safety.ForbiddenHits)</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const form = document.getElementById('chatForm');
+            const input = document.getElementById('chatInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const thread = document.getElementById('chatThread');
+
+            document.querySelectorAll('.dg-suggestion').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    input.value = btn.dataset.prompt || '';
+                    input.focus();
+                    autoResize();
+                });
+            });
+
+            function autoResize() {
+                input.style.height = 'auto';
+                input.style.height = Math.min(input.scrollHeight, 128) + 'px';
+            }
+
+            input?.addEventListener('input', autoResize);
+
+            input?.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (input.value.trim()) form.requestSubmit();
+                }
+            });
+
+            form?.addEventListener('submit', function () {
+                sendBtn.disabled = true;
+                sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+            });
+
+            if (thread && thread.querySelector('.dg-message')) {
+                thread.scrollTop = thread.scrollHeight;
+            }
+
+            autoResize();
+        })();
+    </script>
+}

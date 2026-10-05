@@ -1,0 +1,31 @@
+sequenceDiagram
+    actor Staff
+    participant Browser
+    participant MVC as PatientController
+    participant Svc as PatientService
+    participant UoW as UnitOfWork
+    participant DB as SQL Server
+
+    Staff->>Browser: Open Patient/Create
+    Browser->>MVC: GET Create
+    MVC-->>Browser: Empty CreatePatientViewModel form
+
+    Staff->>Browser: Fill demographics and clinical history
+    Browser->>MVC: POST Create (ValidateAntiForgeryToken)
+    MVC->>MVC: Validate ModelState
+
+    alt Validation failed
+        MVC-->>Browser: Return form with errors
+    else Validation passed
+        MVC->>Svc: CreatePatient(model)
+        Svc->>UoW: GetRepository Patient
+        Svc->>UoW: Add Patient entity
+        Svc->>UoW: Add PatientClinicalHistory if provided
+        UoW->>DB: INSERT Patients
+        UoW->>DB: INSERT PatientClinicalHistories
+        DB-->>UoW: New Patient Id
+        UoW-->>Svc: Success
+        Svc-->>MVC: patientId
+        MVC-->>Browser: Redirect to Patient/Details
+        Browser-->>Staff: Patient details page
+    end

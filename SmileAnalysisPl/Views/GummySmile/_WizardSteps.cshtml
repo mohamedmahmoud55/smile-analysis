@@ -1,0 +1,78 @@
+@using SmileAnalysisBl.ViewModels.GummySmileViewModels
+@model GummySmileWizardBaseViewModel
+
+@{
+    var steps = new (GummySmileWizardStep Step, string Label, string Hint, string Icon, bool Done)[]
+    {
+        (GummySmileWizardStep.Intake, "Intake", "Photos & analyze", "bi-images", Model.StepStatus.IntakeDone),
+        (GummySmileWizardStep.Review, "Review & calibrate", "AI outputs", "bi-crosshair", Model.StepStatus.ReviewDone),
+        (GummySmileWizardStep.Clinical, "Clinical inputs", "Chart data", "bi-clipboard2-pulse", Model.StepStatus.ClinicalDone),
+        (GummySmileWizardStep.Diagnosis, "Diagnosis", "Results", "bi-activity", Model.StepStatus.DiagnosisDone),
+        (GummySmileWizardStep.Treatment, "Treatment plan", "Recommendations", "bi-journal-medical", Model.StepStatus.TreatmentDone)
+    };
+
+    var completedCount = steps.Count(s => s.Done);
+    var progressPct = (int)Math.Round(completedCount / (double)steps.Length * 100);
+
+    string StepAction(GummySmileWizardStep step) => step switch
+    {
+        GummySmileWizardStep.Intake => "Upload",
+        GummySmileWizardStep.Review => "Review",
+        GummySmileWizardStep.Clinical => "Clinical",
+        GummySmileWizardStep.Diagnosis => "Diagnosis",
+        GummySmileWizardStep.Treatment => "Treatment",
+        _ => "Upload"
+    };
+
+    bool CanNavigate(GummySmileWizardStep step, bool done) =>
+        done || (int)step < (int)Model.CurrentStep;
+}
+
+<div class="gs-wizard" aria-label="Analysis workflow">
+    <div class="gs-wizard-progress" role="progressbar" aria-valuenow="@progressPct" aria-valuemin="0" aria-valuemax="100">
+        <div class="gs-wizard-progress-bar" style="width: @progressPct%"></div>
+    </div>
+
+    <div class="gs-wizard-track">
+        @for (var i = 0; i < steps.Length; i++)
+        {
+            var (step, label, hint, icon, done) = steps[i];
+            var isActive = Model.CurrentStep == step;
+            var css = isActive ? "gs-wizard-step is-active" : done ? "gs-wizard-step is-done" : "gs-wizard-step is-pending";
+            var navigable = CanNavigate(step, done) && !isActive;
+            var isLast = i == steps.Length - 1;
+
+            if (navigable)
+            {
+                <a class="@css" asp-controller="GummySmile" asp-action="@StepAction(step)" asp-route-id="@Model.LocalCaseId" title="@label">
+                    <div class="gs-wizard-node">
+                        <i class="bi @(done ? "bi-check-lg" : icon)" aria-hidden="true"></i>
+                    </div>
+                    <div class="gs-wizard-text">
+                        <span class="gs-wizard-index">Step @((int)step)</span>
+                        <span class="gs-wizard-label">@label</span>
+                        <span class="gs-wizard-hint">@hint</span>
+                    </div>
+                </a>
+            }
+            else
+            {
+                <div class="@css" aria-current="@(isActive ? "step" : null)">
+                    <div class="gs-wizard-node">
+                        <i class="bi @(done && !isActive ? "bi-check-lg" : icon)" aria-hidden="true"></i>
+                    </div>
+                    <div class="gs-wizard-text">
+                        <span class="gs-wizard-index">Step @((int)step)</span>
+                        <span class="gs-wizard-label">@label</span>
+                        <span class="gs-wizard-hint">@hint</span>
+                    </div>
+                </div>
+            }
+
+            if (!isLast)
+            {
+                <div class="gs-wizard-connector @(done ? "is-filled" : "")" aria-hidden="true"></div>
+            }
+        }
+    </div>
+</div>

@@ -1,0 +1,162 @@
+@{
+    var ctrl = ViewContext.RouteData.Values["Controller"]?.ToString();
+    var action = ViewContext.RouteData.Values["Action"]?.ToString();
+    string Active(string c, string? a = null)
+    {
+        if (!string.Equals(ctrl, c, StringComparison.OrdinalIgnoreCase)) return "";
+        if (a is null) return "active";
+        return string.Equals(action, a, StringComparison.OrdinalIgnoreCase) ? "active" : "";
+    }
+
+    var doctorScheduleNavActive =
+        string.Equals(ctrl, "Doctor", StringComparison.OrdinalIgnoreCase) &&
+        (string.Equals(action, "MySchedule", StringComparison.OrdinalIgnoreCase) ||
+         string.Equals(action, "Schedule", StringComparison.OrdinalIgnoreCase) ||
+         string.Equals(action, "SchedulePicker", StringComparison.OrdinalIgnoreCase));
+
+    var patientNavActive =
+        string.Equals(ctrl, "Patient", StringComparison.OrdinalIgnoreCase);
+
+    var dentalAiNavActive =
+        string.Equals(ctrl, "DentalGemma", StringComparison.OrdinalIgnoreCase);
+
+    var isSuper = User.IsInRole("SuperAdmin");
+    var isAdmin = User.IsInRole("Admin");
+    var isDoctor = User.IsInRole("Doctor");
+    var isStaff = User.IsInRole("Staff");
+    var doctorMenuOnly = isDoctor && !isSuper && !isAdmin;
+    var staffMenuOnly = isStaff && !isSuper && !isAdmin && !isDoctor;
+}
+<nav class="d-flex flex-column gap-1 px-2 py-3 flex-grow-1 ortho-scrollbar">
+    @if (isSuper)
+    {
+        <a class="ortho-nav-link @Active("Home", "Index")" asp-controller="Home" asp-action="Index">
+            <i class="bi bi-speedometer2"></i>
+            <span>Dashboard</span>
+        </a>
+        <a class="ortho-nav-link @(patientNavActive ? "active" : "")" asp-controller="Patient" asp-action="Index">
+            <i class="bi bi-people"></i>
+            <span>Patients</span>
+        </a>
+        <a class="ortho-nav-link @(dentalAiNavActive ? "active" : "")" asp-controller="DentalGemma" asp-action="Index">
+            <i class="bi bi-chat-dots"></i>
+            <span>Dental AI Chat</span>
+        </a>
+        <a class="ortho-nav-link @Active("Staff", "Index")" asp-controller="Staff" asp-action="Index">
+            <i class="bi bi-person-badge"></i>
+            <span>Staff</span>
+        </a>
+        <a class="ortho-nav-link @Active("Doctor", "Index")" asp-controller="Doctor" asp-action="Index">
+            <i class="bi bi-heart-pulse"></i>
+            <span>Doctors</span>
+        </a>
+        <a class="ortho-nav-link @Active("Appointment", "Index")" asp-controller="Appointment" asp-action="Index">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-list-check"></i>
+                <span class="ortho-ping-dot d-inline-block"></span>
+            </div>
+            <span>Appointments</span>
+        </a>
+        <a class="ortho-nav-link @Active("Payment", "Index")" asp-controller="Payment" asp-action="Index">
+            <i class="bi bi-wallet2"></i>
+            <span>Financials</span>
+        </a>
+        <a class="ortho-nav-link @(doctorScheduleNavActive ? "active" : "")" asp-controller="Doctor" asp-action="SchedulePicker">
+            <i class="bi bi-calendar3"></i>
+            <span>Doctor schedule</span>
+        </a>
+        <a class="ortho-nav-link @Active("AdminManagement")" asp-controller="AdminManagement" asp-action="Index">
+            <i class="bi bi-person-gear"></i>
+            <span>Admin management</span>
+        </a>
+    }
+    else if (doctorMenuOnly)
+    {
+        <a class="ortho-nav-link @(patientNavActive ? "active" : "")" asp-controller="Patient" asp-action="Index">
+            <i class="bi bi-people"></i>
+            <span>Patients</span>
+        </a>
+        <a class="ortho-nav-link @(dentalAiNavActive ? "active" : "")" asp-controller="DentalGemma" asp-action="Index">
+            <i class="bi bi-chat-dots"></i>
+            <span>Dental AI Chat</span>
+        </a>
+        <a class="ortho-nav-link @(doctorScheduleNavActive ? "active" : "")" asp-controller="Doctor" asp-action="MySchedule">
+            <i class="bi bi-calendar3"></i>
+            <span>Doctor schedule</span>
+        </a>
+    }
+    else if (staffMenuOnly)
+    {
+        <a class="ortho-nav-link @(patientNavActive ? "active" : "")" asp-controller="Patient" asp-action="Index">
+            <i class="bi bi-people"></i>
+            <span>Patients</span>
+        </a>
+        <a class="ortho-nav-link @(dentalAiNavActive ? "active" : "")" asp-controller="DentalGemma" asp-action="Index">
+            <i class="bi bi-chat-dots"></i>
+            <span>Dental AI Chat</span>
+        </a>
+        <a class="ortho-nav-link @Active("Appointment", "Index")" asp-controller="Appointment" asp-action="Index">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-list-check"></i>
+                <span class="ortho-ping-dot d-inline-block"></span>
+            </div>
+            <span>Appointments</span>
+        </a>
+        <a class="ortho-nav-link @Active("Payment", "Index")" asp-controller="Payment" asp-action="Index">
+            <i class="bi bi-wallet2"></i>
+            <span>Financials</span>
+        </a>
+        <a class="ortho-nav-link @(doctorScheduleNavActive ? "active" : "")" asp-controller="Doctor" asp-action="SchedulePicker">
+            <i class="bi bi-calendar3"></i>
+            <span>Doctor schedule</span>
+        </a>
+    }
+    else
+    {
+        <a class="ortho-nav-link @Active("Home", "Index")" asp-controller="Home" asp-action="Index">
+            <i class="bi bi-speedometer2"></i>
+            <span>Dashboard</span>
+        </a>
+        <a class="ortho-nav-link @(patientNavActive ? "active" : "")" asp-controller="Patient" asp-action="Index">
+            <i class="bi bi-people"></i>
+            <span>Patients</span>
+        </a>
+        <a class="ortho-nav-link @(dentalAiNavActive ? "active" : "")" asp-controller="DentalGemma" asp-action="Index">
+            <i class="bi bi-chat-dots"></i>
+            <span>Dental AI Chat</span>
+        </a>
+        <a class="ortho-nav-link @Active("Staff", "Index")" asp-controller="Staff" asp-action="Index">
+            <i class="bi bi-person-badge"></i>
+            <span>Staff</span>
+        </a>
+        <a class="ortho-nav-link @Active("Doctor", "Index")" asp-controller="Doctor" asp-action="Index">
+            <i class="bi bi-heart-pulse"></i>
+            <span>Doctors</span>
+        </a>
+        <a class="ortho-nav-link @Active("Appointment", "Index")" asp-controller="Appointment" asp-action="Index">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-list-check"></i>
+                <span class="ortho-ping-dot d-inline-block"></span>
+            </div>
+            <span>Appointments</span>
+        </a>
+        <a class="ortho-nav-link @Active("Payment", "Index")" asp-controller="Payment" asp-action="Index">
+            <i class="bi bi-wallet2"></i>
+            <span>Financials</span>
+        </a>
+        @if (isDoctor)
+        {
+            <a class="ortho-nav-link @(doctorScheduleNavActive ? "active" : "")" asp-controller="Doctor" asp-action="MySchedule">
+                <i class="bi bi-calendar3"></i>
+                <span>Doctor schedule</span>
+            </a>
+        }
+        else
+        {
+            <a class="ortho-nav-link @(doctorScheduleNavActive ? "active" : "")" asp-controller="Doctor" asp-action="SchedulePicker">
+                <i class="bi bi-calendar3"></i>
+                <span>Doctor schedule</span>
+            </a>
+        }
+    }
+</nav>

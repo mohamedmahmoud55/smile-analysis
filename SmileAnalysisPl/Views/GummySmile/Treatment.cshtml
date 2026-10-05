@@ -1,0 +1,130 @@
+@using SmileAnalysisBl.GummySmile
+@model SmileAnalysisBl.ViewModels.GummySmileViewModels.GummySmileTreatmentViewModel
+@{
+    ViewData["Title"] = "Treatment Plan";
+    var plan = Model.Case?.Treatment;
+}
+
+<div class="cc-page">
+    <div class="pa-analysis-header">
+        <a asp-action="Diagnosis" asp-route-id="@Model.LocalCaseId" class="pa-back-btn" title="Back">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div class="flex-grow-1">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                <h1 class="h4 fw-bold text-dark mb-0">Treatment Plan</h1>
+                <span class="pa-ai-badge"><i class="bi bi-stars"></i> AI Powered</span>
+            </div>
+            <p class="text-secondary small mb-0">@Model.PatientName · @Model.DisplayId</p>
+        </div>
+    </div>
+
+    <partial name="_WizardSteps" model="Model" />
+
+    @if (!Model.IsReady)
+    {
+        <div class="alert alert-info">
+            Treatment plan is not available yet. Complete the diagnosis workflow first.
+            <a asp-action="Diagnosis" asp-route-id="@Model.LocalCaseId" class="alert-link ms-1">View diagnosis</a>
+        </div>
+    }
+    else
+    {
+        <div class="gs-clinical-card">
+            <h2>Treatment plan</h2>
+            <p class="gs-clinical-subtitle">Modality recommendations ranked by etiology and clinical feasibility.</p>
+
+            @foreach (var item in plan!.Items)
+            {
+                <div class="gs-treatment-item">
+                    <div class="gs-treatment-item-header">
+                        <strong>@item.ModalityName</strong>
+                        <span class="badge gs-suitability-@item.Suitability">@item.Suitability</span>
+                        <span class="badge bg-light text-secondary border">@GsEtiologyCatalog.Label(item.Etiology)</span>
+                    </div>
+                    <div class="small mb-2">
+                        <span class="text-secondary">Region:</span> @item.Region
+                        @if (item.FdiList.Any())
+                        {
+                            <span class="ms-2 text-secondary">FDI:</span>
+                            @string.Join(", ", item.FdiList)
+                        }
+                    </div>
+                    <div class="row g-2 small">
+                        <div class="col-6 col-md-3">
+                            <div class="text-secondary">Mean correction</div>
+                            <div class="fw-semibold">@item.MeanCorrectionMm.ToString("0.#") mm</div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="text-secondary">Total required</div>
+                            <div class="fw-semibold">@item.TotalCorrectionRequiredMm.ToString("0.#") mm</div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="text-secondary">Relapse</div>
+                            <div class="fw-semibold">@item.RelapsePct.ToString("0.#")%</div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="text-secondary">Residual</div>
+                            <div class="fw-semibold">@item.ResidualMm.ToString("0.#") mm</div>
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(item.Rationale))
+                    {
+                        <p class="small text-secondary mt-2 mb-0">@item.Rationale</p>
+                    }
+                    @foreach (var w in item.Warnings)
+                    {
+                        <div class="alert alert-warning small mt-2 mb-0 py-2">@w</div>
+                    }
+                </div>
+            }
+        </div>
+
+        @if (plan.Sequencing.Any())
+        {
+            <div class="gs-clinical-card">
+                <h2>Sequencing</h2>
+                <ol class="small mb-0">
+                    @foreach (var step in plan.Sequencing)
+                    {
+                        <li>@step</li>
+                    }
+                </ol>
+            </div>
+        }
+
+        @if (plan.GeneralNotes.Any())
+        {
+            <div class="gs-clinical-card">
+                <h2>General notes</h2>
+                @foreach (var note in plan.GeneralNotes)
+                {
+                    <p class="small mb-1">@note</p>
+                }
+            </div>
+        }
+
+        @if (plan.Alternatives.Any())
+        {
+            <div class="gs-clinical-card">
+                <h2>Alternatives</h2>
+                <ul class="small mb-0">
+                    @foreach (var alt in plan.Alternatives)
+                    {
+                        <li>@alt</li>
+                    }
+                </ul>
+            </div>
+        }
+
+        <div class="d-flex flex-wrap gap-2">
+            <a asp-action="DownloadPdf" asp-route-id="@Model.LocalCaseId" class="btn cc-btn-primary px-4">
+                <i class="bi bi-file-earmark-pdf me-2"></i>Download PDF report
+            </a>
+            <a asp-controller="GummySmile" asp-action="Start" asp-route-patientId="@Model.PatientId" class="btn btn-outline-primary px-4">
+                <i class="bi bi-plus-lg me-2"></i>New analysis
+            </a>
+            <a asp-controller="Patient" asp-action="Details" asp-route-id="@Model.PatientId" class="btn btn-outline-secondary px-4">Back to patient</a>
+        </div>
+    }
+</div>

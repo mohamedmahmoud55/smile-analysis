@@ -1,0 +1,40 @@
+flowchart TB
+    subgraph client [Client Tier]
+        Browser[Web Browser]
+    end
+
+    subgraph pl [Presentation Layer - SmileAnalysisPl]
+        MVC[MVC Controllers]
+        Views[Razor Views]
+        Static[wwwroot CSS/JS]
+    end
+
+    subgraph bl [Business Layer - SmileAnalysisBl]
+        DomainSvc[Domain Services]
+        GsClient[GummySmileApiService]
+        XrClient[XRayAnalysisApiService]
+        PdfSvc[PrescriptionPdfService]
+    end
+
+    subgraph dal [Data Layer - SmileAnalysisDal]
+        UoW[UnitOfWork + Repositories]
+        EF[EF Core DbContext]
+        DB[(SQL Server)]
+    end
+
+    subgraph external [External AI Services - Google Cloud Run]
+        GsAPI[Gummy Smile API]
+        XrAPI[X-Ray Analysis API]
+    end
+
+    Browser --> MVC
+    MVC --> Views
+    MVC --> DomainSvc
+    DomainSvc --> UoW
+    DomainSvc --> GsClient
+    DomainSvc --> XrClient
+    DomainSvc --> PdfSvc
+    UoW --> EF
+    EF --> DB
+    GsClient --> GsAPI
+    XrClient --> XrAPI

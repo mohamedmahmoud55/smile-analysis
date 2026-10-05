@@ -1,0 +1,156 @@
+@model SmileAnalysisBl.ViewModels.DoctorViewModels.DoctorAvailabilityPageViewModel
+@{
+    ViewData["Title"] = "Doctor availability";
+    var slotCount = Model.Slots.Count;
+    var daysCovered = Model.Slots.Select(s => s.DayOfWeek).Distinct().Count();
+}
+
+<div class="cc-page">
+    <div class="mb-4 d-flex flex-wrap justify-content-between align-items-start gap-3">
+        <div>
+            <a asp-action="Index" class="text-decoration-none small text-secondary"><i class="bi bi-arrow-left me-1"></i>Back to medical team</a>
+            <h2 class="h4 fw-bold text-dark mt-2 mb-1">Weekly availability</h2>
+            <p class="text-secondary small mb-0">
+                @Model.DoctorDisplayName — set recurring hours when this doctor can accept appointments.
+            </p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a asp-action="Edit" asp-route-id="@Model.DoctorId" class="btn btn-outline-secondary btn-sm rounded-pill d-inline-flex align-items-center gap-1">
+                <i class="bi bi-pencil"></i>
+                Edit profile
+            </a>
+            <a asp-action="Schedule" asp-route-id="@Model.DoctorId" class="btn btn-outline-primary btn-sm rounded-pill d-inline-flex align-items-center gap-1">
+                <i class="bi bi-calendar3"></i>
+                View schedule
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] is string ok)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @ok
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] is string bad)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @bad
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-md-6">
+            <div class="cc-bento-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="p-2 rounded-3 bg-primary-subtle text-primary">
+                        <i class="bi bi-clock fs-5"></i>
+                    </div>
+                </div>
+                <p class="cc-bento-label mb-1">Time slots</p>
+                <p class="cc-bento-value mb-0">@slotCount</p>
+            </div>
+        </div>
+        <div class="col-12 col-md-6">
+            <div class="cc-bento-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="p-2 rounded-3 bg-warning-subtle text-warning-emphasis">
+                        <i class="bi bi-calendar-week fs-5"></i>
+                    </div>
+                </div>
+                <p class="cc-bento-label mb-1">Days covered</p>
+                <p class="cc-bento-value mb-0">@daysCovered</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12 col-lg-7">
+            <div class="cc-data-card h-100">
+                <div class="cc-card-head px-4 py-3">
+                    <h3 class="h6 fw-bold mb-0 text-dark">Scheduled hours (@slotCount)</h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="table cc-table mb-0">
+                        <thead>
+                        <tr>
+                            <th class="ps-4">Day</th>
+                            <th>Start</th>
+                            <th>End</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        @foreach (var s in Model.Slots)
+                        {
+                            <tr class="cc-table-row border-top border-light">
+                                <td class="ps-4">
+                                    <span class="cc-badge-blue">@s.DayLabel</span>
+                                </td>
+                                <td class="small fw-semibold text-dark">@s.StartDisplay</td>
+                                <td class="small fw-semibold text-dark">@s.EndDisplay</td>
+                                <td class="text-end pe-4">
+                                    <form asp-action="DeleteAvailability" method="post" class="d-inline-flex m-0" onsubmit="return confirm('Remove this time slot?');">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="doctorId" value="@Model.DoctorId" />
+                                        <input type="hidden" name="availabilityId" value="@s.Id" />
+                                        <button type="submit" class="btn btn-link btn-sm p-1 text-danger" title="Remove slot">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                        @if (!Model.Slots.Any())
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center text-secondary py-5">
+                                    <i class="bi bi-calendar-x fs-2 d-block mb-2 opacity-50"></i>
+                                    No availability yet. Add at least one day and time range.
+                                </td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-5">
+            <div class="cc-bento-card p-4">
+                <div class="d-flex align-items-center gap-2 mb-4">
+                    <div class="p-2 rounded-3 bg-success-subtle text-success-emphasis">
+                        <i class="bi bi-plus-circle fs-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="cc-form-section-title mb-0">Add time slot</h3>
+                        <p class="small text-muted mb-0 mt-1">Pick a weekday and working hours.</p>
+                    </div>
+                </div>
+                <partial name="_AddDoctorAvailabilityForm" model="Model.AddForm" />
+            </div>
+
+            <div class="cc-bento-card p-4 mt-4">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <div class="p-2 rounded-3 bg-secondary-subtle text-secondary-emphasis">
+                        <i class="bi bi-info-circle fs-5"></i>
+                    </div>
+                    <h3 class="cc-form-section-title mb-0">Tips</h3>
+                </div>
+                <ul class="small text-secondary mb-0 ps-3 mt-3">
+                    <li class="mb-2">Add one row per time block (e.g. Monday 9:00 AM–12:00 PM).</li>
+                    <li class="mb-2">You can add multiple slots on the same day.</li>
+                    <li class="mb-0">Appointment booking uses these hours to show available times.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script src="~/js/time-12-picker.js" asp-append-version="true"></script>
+    <script>initTime12Pickers();</script>
+}

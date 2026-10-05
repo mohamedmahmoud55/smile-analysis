@@ -1,0 +1,70 @@
+@model SmileAnalysisBl.ViewModels.PatientViewModels.PatientClinicalHistoryInputModel
+
+<div class="row g-4">
+    <div class="col-12 col-lg-6">
+        <div class="cc-clinical-section">
+            <h4 class="h6 fw-bold text-dark mb-1">Medical history</h4>
+            <p class="small text-secondary mb-3">All fields are optional.</p>
+            <div class="row g-3">
+                <div class="col-12">
+                    <label asp-for="ChronicDiseases" class="form-label small fw-semibold"></label>
+                    <textarea asp-for="ChronicDiseases" class="form-control" rows="2" placeholder="e.g. diabetes, hypertension"></textarea>
+                    <span asp-validation-for="ChronicDiseases" class="text-danger small"></span>
+                </div>
+                <div class="col-12">
+                    <label asp-for="CurrentMedications" class="form-label small fw-semibold"></label>
+                    <textarea asp-for="CurrentMedications" class="form-control" rows="2" placeholder="Current prescriptions or supplements"></textarea>
+                    <span asp-validation-for="CurrentMedications" class="text-danger small"></span>
+                </div>
+                <div class="col-12">
+                    <label asp-for="Allergies" class="form-label small fw-semibold"></label>
+                    <textarea asp-for="Allergies" class="form-control" rows="2" placeholder="Especially anesthesia or antibiotics"></textarea>
+                    <span asp-validation-for="Allergies" class="text-danger small"></span>
+                </div>
+                <div class="col-12">
+                    <label asp-for="PreviousSurgeries" class="form-label small fw-semibold"></label>
+                    <textarea asp-for="PreviousSurgeries" class="form-control" rows="2"></textarea>
+                    <span asp-validation-for="PreviousSurgeries" class="text-danger small"></span>
+                </div>
+                <div class="col-12">
+                    <label asp-for="HeartOrBleedingConditions" class="form-label small fw-semibold"></label>
+                    <textarea asp-for="HeartOrBleedingConditions" class="form-control" rows="2"></textarea>
+                    <span asp-validation-for="HeartOrBleedingConditions" class="text-danger small"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-lg-6">
+        <div class="cc-clinical-section">
+            <h4 class="h6 fw-bold text-dark mb-1">Dental history</h4>
+            <p class="small text-secondary mb-3">Recent visits and oral health notes.</p>
+            <div class="row g-3">
+                <div class="col-12">
+                    <label asp-for="LastDentalVisit" class="form-label small fw-semibold"></label>
+                    <input asp-for="LastDentalVisit" class="form-control" type="date" />
+                    <span asp-validation-for="LastDentalVisit" class="text-danger small"></span>
+                </div>
+                <div class="col-12">
+                    <label asp-for="CurrentPainDetails" class="form-label small fw-semibold"></label>
+                    <textarea asp-for="CurrentPainDetails" class="form-control" rows="2" placeholder="Location, intensity, duration"></textarea>
+                    <span asp-validation-for="CurrentPainDetails" class="text-danger small"></span>
+                </div>
+                <div class="col-12">
+                    <label asp-for="PreviousDentalTreatments" class="form-label small fw-semibold"></label>
+                    <textarea asp-for="PreviousDentalTreatments" class="form-control" rows="2" placeholder="Fillings, root canals, braces, extractions"></textarea>
+                    <span asp-validation-for="PreviousDentalTreatments" class="text-danger small"></span>
+                </div>
+                <div class="col-12">
+                    <label asp-for="GumProblems" class="form-label small fw-semibold"></label>
+                    <textarea asp-for="GumProblems" class="form-control" rows="2" placeholder="Bleeding, swelling"></textarea>
+                    <span asp-validation-for="GumProblems" class="text-danger small"></span>
+                </div>
+                <div class="col-12">
+                    <label asp-for="OralHabits" class="form-label small fw-semibold"></label>
+                    <textarea asp-for="OralHabits" class="form-control" rows="2" placeholder="Smoking, teeth grinding, brushing"></textarea>
+                    <span asp-validation-for="OralHabits" class="text-danger small"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

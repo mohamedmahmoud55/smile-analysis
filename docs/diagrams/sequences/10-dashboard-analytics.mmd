@@ -1,0 +1,36 @@
+sequenceDiagram
+    actor SuperAdmin
+    participant Browser
+    participant MVC as HomeController
+    participant Analytics as AnalyticsService
+    participant UoW as UnitOfWork
+    participant DB as SQL Server
+    participant UserMgr as UserManager
+
+    SuperAdmin->>Browser: Navigate to Home/Index after login
+    Browser->>MVC: GET Index
+    MVC->>MVC: Check role not Doctor-only or Staff-only
+
+    MVC->>Analytics: GetOrthoDashboard()
+    Analytics->>UoW: GetRepository Appointment
+    Analytics->>UoW: GetRepository Patient
+    Analytics->>UoW: GetRepository Doctor
+    Analytics->>UoW: GetRepository Payment
+
+    UoW->>DB: COUNT appointments by status
+    UoW->>DB: COUNT total patients
+    UoW->>DB: COUNT active doctors
+    UoW->>DB: SUM recent payments
+    DB-->>Analytics: aggregated metrics
+
+    Analytics-->>MVC: OrthoDashboardViewModel
+
+    MVC->>UserMgr: GetUserAsync(current user)
+    UserMgr->>DB: SELECT AspNetUsers
+    UserMgr-->>MVC: ApplicationUser
+    MVC->>MVC: Set WelcomeName on dashboard model
+
+    MVC-->>Browser: Home/Index view with metric cards
+    Browser-->>SuperAdmin: Dashboard with welcome message and analytics
+
+    Note over SuperAdmin,DB: Doctor and Staff-only users are redirected to Patient/Index instead

@@ -1,0 +1,162 @@
+@model SmileAnalysisBl.ViewModels.AccountViewModels.LoginViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html class="h-100" lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login | The Clinical Curator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/login-clinical.css" asp-append-version="true" />
+</head>
+<body class="cc-login-page">
+    <div class="container-fluid g-0">
+        <div class="row g-0 min-vh-100">
+            <!-- Form -->
+            <main class="col-12 col-lg-5 cc-form-panel">
+                <div class="position-absolute top-0 start-0 w-100 h-100 cc-hero-pattern opacity-50 pointer-events-none"></div>
+                <div class="cc-form-inner">
+                    <header class="mb-4 mb-md-5">
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <div class="cc-logo-box flex-shrink-0">
+                                <img src="~/images/icon.svg" alt="" width="24" height="24" />
+                            </div>
+                            <div>
+                                <h1 class="cc-brand-title">DentAI</h1>
+                                <p class="cc-brand-tag">Powered by PureLine Dental</p>
+                            </div>
+                        </div>
+                        <h2 class="cc-headline fw-bold display-6 mb-2">Welcome back</h2>
+                        <p class="text-secondary mb-0">Enter your credentials to access your clinical dashboard.</p>
+                    </header>
+
+                    <form asp-action="Login" asp-controller="Account" method="post" id="loginForm">
+                        @Html.AntiForgeryToken()
+                        <div asp-validation-summary="ModelOnly" class="cc-invalid-summary mb-4"></div>
+                        @Html.ValidationMessage("InvalidLogin", new { @class = "cc-invalid-summary d-block mb-3" })
+
+                        <div class="mb-4">
+                            <label asp-for="Email" class="cc-label d-block">Email address</label>
+                            <div class="cc-input-icon-wrap">
+                                <i class="bi bi-envelope cc-input-icon"></i>
+                                <input asp-for="Email"
+                                       class="form-control"
+                                       autocomplete="username"
+                                       placeholder="dr.smith@clinic.com" />
+                            </div>
+                            <span asp-validation-for="Email" class="text-danger small d-block mt-1"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center justify-content-between ms-1 mb-1">
+                                <label asp-for="Password" class="cc-label mb-0">Password</label>
+                                <a class="cc-forgot-link" href="#">Forgot password?</a>
+                            </div>
+                            <div class="cc-input-icon-wrap cc-password-wrap">
+                                <i class="bi bi-lock-fill cc-input-icon"></i>
+                                <input asp-for="Password"
+                                       class="form-control"
+                                       id="loginPassword"
+                                       autocomplete="current-password"
+                                       placeholder="••••••••" />
+                                <button type="button" class="cc-toggle-password" id="togglePassword" aria-label="Show password">
+                                    <i class="bi bi-eye" id="togglePasswordIcon"></i>
+                                </button>
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger small d-block mt-1"></span>
+                        </div>
+
+                        <div class="form-check mb-4 ms-1">
+                            <input asp-for="RememberMe" class="form-check-input border-secondary" type="checkbox" id="rememberMe" />
+                            <label class="form-check-label small fw-semibold text-secondary" for="rememberMe">Keep me signed in for 30 days</label>
+                        </div>
+
+                        <button type="submit" class="btn w-100 cc-primary-gradient d-flex align-items-center justify-content-center gap-2" id="loginBtn">
+                            <span>Sign in to dashboard</span>
+                            <i class="bi bi-arrow-right"></i>
+                        </button>
+                    </form>
+
+                    <footer class="mt-5 pt-2">
+                        @* <p class="small text-secondary"> *@
+                        @*     New to Clinical Curator? *@
+                        @*     <a href="#" class="fw-bold text-decoration-none" style="color: var(--cc-primary);">Request access</a> *@
+                        @* </p> *@
+                        <div class="mt-4 pt-4 border-top border-opacity-25 d-flex flex-wrap justify-content-between gap-2" style="border-color: var(--cc-outline-variant) !important;">
+                            <p class="cc-footer-muted mb-0">© @DateTime.UtcNow.Year PureLine Dental</p>
+                            <a href="#" class="cc-footer-muted text-decoration-none">Privacy policy</a>
+                        </div>
+                    </footer>
+                </div>
+            </main>
+
+            <!-- Hero -->
+            <aside class="col-lg-7 cc-hero-aside p-0">
+                <img class="cc-hero-bg"
+                     src="https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=2000&q=80"
+                     alt="Modern dental clinic interior" />
+                <div class="cc-hero-overlay"></div>
+                <div class="cc-hero-content">
+                    @* <div class="d-inline-flex align-items-center gap-2 px-3 py-2 rounded-pill border border-white border-opacity-25 bg-white bg-opacity-10 backdrop-blur"> *@
+                    @*     $1$ <span class="rounded-circle bg-success" style="width: 8px; height: 8px;"></span> #1# *@
+                    @*     $1$ <span class="small fw-bold text-uppercase" style="letter-spacing: 0.08em;">System online</span> #1# *@
+                    @* </div> *@
+                   
+                    @* <div class="d-flex align-items-center gap-3 flex-wrap"> *@
+                    @*     <div class="d-flex cc-avatar-stack"> *@
+                    @*         <img class="rounded-circle" src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=96&h=96&q=80" alt="" width="40" height="40" /> *@
+                    @*         <img class="rounded-circle" src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=96&h=96&q=80" alt="" width="40" height="40" /> *@
+                    @*         <div class="rounded-circle d-flex align-items-center justify-content-center small fw-bold text-white" style="width: 40px; height: 40px; background: var(--cc-primary); border: 2px solid rgba(255,255,255,0.35); margin-left: -0.6rem;">+1k</div> *@
+                    @*     </div> *@
+                    @*     <p class="small fst-italic mb-0" style="color: rgba(255,255,255,0.9);">Join thousands of dental professionals today.</p> *@
+                    @* </div> *@
+                </div>
+                <div class="cc-decorative-ring"></div>
+            </aside>
+        </div>
+    </div>
+
+    <button type="button" class="cc-mobile-fab d-lg-none" aria-label="Help">
+        <i class="bi bi-question-circle fs-5"></i>
+    </button>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+
+    <script>
+        (function () {
+            const pwd = document.getElementById('loginPassword');
+            const btn = document.getElementById('togglePassword');
+            const icon = document.getElementById('togglePasswordIcon');
+            if (btn && pwd && icon) {
+                btn.addEventListener('click', function () {
+                    const show = pwd.type === 'password';
+                    pwd.type = show ? 'text' : 'password';
+                    icon.className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+                    btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+                });
+            }
+
+            const form = document.getElementById('loginForm');
+            const loginBtn = document.getElementById('loginBtn');
+            if (form && loginBtn) {
+                form.addEventListener('submit', function () {
+                    if ($(form).valid()) {
+                        loginBtn.disabled = true;
+                        loginBtn.classList.add('opacity-75');
+                    }
+                });
+            }
+
+            document.getElementById('Email')?.focus();
+        })();
+    </script>
+</body>
+</html>

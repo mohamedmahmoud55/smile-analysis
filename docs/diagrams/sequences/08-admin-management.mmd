@@ -1,0 +1,50 @@
+sequenceDiagram
+    actor SuperAdmin
+    participant Browser
+    participant MVC as AdminManagementController
+    participant Svc as AdminService
+    participant UserMgr as UserManager
+    participant RoleMgr as RoleManager
+    participant DB as SQL Server
+
+    SuperAdmin->>Browser: Open AdminManagement/Create
+    Browser->>MVC: GET Create
+    MVC-->>Browser: CreateAdminViewModel form
+
+    SuperAdmin->>Browser: Enter name email password roles
+    Browser->>MVC: POST Create
+    MVC->>MVC: Validate ModelState
+
+    alt Validation failed
+        MVC-->>Browser: Form with errors
+    else Valid input
+        MVC->>Svc: CreateAdmin(model)
+        Svc->>UserMgr: CreateAsync(ApplicationUser, password)
+        UserMgr->>DB: INSERT AspNetUsers
+        DB-->>UserMgr: user Id
+
+        loop For each selected role
+            Svc->>RoleMgr: RoleExistsAsync(roleName)
+            Svc->>UserMgr: AddToRoleAsync(user, roleName)
+            UserMgr->>DB: INSERT AspNetUserRoles
+        end
+
+        UserMgr-->>Svc: IdentityResult Succeeded
+        Svc-->>MVC: Succeeded
+        MVC-->>Browser: Redirect AdminManagement/Index
+        Browser-->>SuperAdmin: Updated user list
+    end
+
+    SuperAdmin->>Browser: Open ManageRoles for user
+    Browser->>MVC: GET ManageRoles(id)
+    MVC->>Svc: GetRoleAssignmentModel(id)
+    Svc->>UserMgr: GetRolesAsync(user)
+    UserMgr->>DB: SELECT roles
+    MVC-->>Browser: Role checkboxes
+
+    SuperAdmin->>Browser: POST updated roles
+    Browser->>MVC: POST ManageRoles
+    MVC->>Svc: UpdateRoles(model)
+    Svc->>UserMgr: Remove and add roles
+    UserMgr->>DB: UPDATE AspNetUserRoles
+    MVC-->>Browser: Redirect Index

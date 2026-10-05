@@ -1,0 +1,95 @@
+@model SmileAnalysisBl.ViewModels.AppointmentViewModels.CreateAppointmentViewModel
+@{
+    ViewData["Title"] = "Schedule appointment";
+    var minDate = DateTime.Today.ToString("yyyy-MM-dd");
+}
+
+<div class="cc-page">
+    <div class="mb-4">
+        <a asp-action="Index" class="text-decoration-none small text-secondary"><i class="bi bi-arrow-left me-1"></i>Back to appointments</a>
+        <h2 class="h4 fw-bold text-dark mt-2 mb-1">Schedule appointment</h2>
+        <p class="text-secondary small mb-0">Choose a patient and doctor, then pick an available time slot from the doctor's weekly schedule.</p>
+    </div>
+
+    <form asp-action="Create" method="post" id="appt-form">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small" role="alert"></div>
+
+        <div class="row g-4">
+            <div class="col-12 col-lg-5">
+                <div class="cc-bento-card p-4 h-100">
+                    <div class="d-flex align-items-center gap-2 mb-4">
+                        <div class="p-2 rounded-3 bg-primary-subtle text-primary">
+                            <i class="bi bi-person fs-5"></i>
+                        </div>
+                        <h3 class="cc-form-section-title mb-0">Patient</h3>
+                    </div>
+                    <div>
+                        <label asp-for="PatientId" class="form-label fw-semibold small"></label>
+                        <select asp-for="PatientId" class="form-select" asp-items="Model.Patients"></select>
+                        <span asp-validation-for="PatientId" class="text-danger small"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-7">
+                <div class="cc-bento-card p-4">
+                    <div class="d-flex align-items-center gap-2 mb-4">
+                        <div class="p-2 rounded-3 bg-warning-subtle text-warning-emphasis">
+                            <i class="bi bi-calendar-event fs-5"></i>
+                        </div>
+                        <h3 class="cc-form-section-title mb-0">Visit details</h3>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="DoctorId" class="form-label fw-semibold small"></label>
+                            <select asp-for="DoctorId" class="form-select" id="DoctorId" asp-items="Model.Doctors"></select>
+                            <span asp-validation-for="DoctorId" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="AppointmentDate" class="form-label fw-semibold small"></label>
+                            <input asp-for="AppointmentDate" class="form-control" type="date" min="@minDate" id="AppointmentDate" />
+                            <span asp-validation-for="AppointmentDate" class="text-danger small"></span>
+                        </div>
+                        <input asp-for="DurationMinutes" type="hidden" value="30" />
+
+                        <div class="col-12">
+                            <label asp-for="AppointmentStartTime" class="form-label fw-semibold small"></label>
+                            <select asp-for="AppointmentStartTime" class="form-select d-none" id="AppointmentStartTime" aria-hidden="true" tabindex="-1">
+                                <option value="">— Select doctor and date first —</option>
+                            </select>
+                            <div id="slot-grid" class="cc-slot-grid d-none" role="group" aria-label="Available time slots"></div>
+                            <span asp-validation-for="AppointmentStartTime" class="text-danger small d-block"></span>
+                            <p class="small text-muted mb-0 mt-2" id="slots-hint">Slots update when you change doctor or date.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 mt-4">
+            <button type="submit" class="btn cc-btn-primary d-inline-flex align-items-center gap-2">
+                <i class="bi bi-check2"></i>
+                Confirm appointment
+            </button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script src="~/js/appointment-slots.js" asp-append-version="true"></script>
+    <script>
+        initAppointmentSlots({
+            doctorSelector: '#DoctorId',
+            dateSelector: '#AppointmentDate',
+            timeSelector: '#AppointmentStartTime',
+            gridSelector: '#slot-grid',
+            hintSelector: '#slots-hint',
+            urlBase: '@Url.Action("GetAvailableSlots", "Appointment")',
+            initialTime: '@(Model.AppointmentStartTime?.ToString("HH:mm:ss") ?? "")'
+        });
+    </script>
+}

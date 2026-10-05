@@ -1,0 +1,120 @@
+flowchart TD
+    Start([Open App]) --> Login[Login]
+    Login --> Creds[Enter creds]
+    Creds --> Valid{Valid?}
+    Valid -->|No| Err[Show err]
+    Err --> Login
+    Valid -->|Yes| Auth[ASP.NET Identity auth]
+    Auth --> Role{Role?}
+
+    Role -->|SA/AD| Dash[Dashboard]
+    Role -->|DR/ST| PatIdx[Pat list]
+
+    Dash --> Menu{Module?}
+    PatIdx --> Menu
+
+    Menu -->|Pat| PatList[Pat list]
+    Menu -->|Doc| DocMgmt[Doc mgmt]
+    Menu -->|ST| StfMgmt[Staff mgmt]
+    Menu -->|Apt| AptMgmt[Apt mgmt]
+    Menu -->|Pay| PayMgmt[Billing]
+    Menu -->|Adm| AdmMgmt[User mgmt]
+    Menu -->|Rx| RxFlow[Rx flow]
+    Menu -->|GS| GSFlow[GS analysis]
+    Menu -->|XR| XRFlow[XR analysis]
+
+    PatList --> PatAct{Pat act?}
+    PatAct -->|C| PatC[Create pat]
+    PatAct -->|U| PatU[Update pat]
+    PatAct -->|D| PatD[Delete pat]
+    PatAct -->|R| PatDet[Pat details]
+    PatC --> PatDet
+    PatU --> PatDet
+    PatDet --> AI{AI?}
+    AI -->|GS| GSFlow
+    AI -->|XR| XRFlow
+    AI -->|No| Menu
+
+    DocMgmt --> DocAct{Doc act?}
+    DocAct -->|CRUD| DocSave[Save doc]
+    DocAct -->|Sch| DocSch[Set avail]
+    DocSave --> Menu
+    DocSch --> Menu
+
+    StfMgmt --> StfSave[Save staff]
+    StfSave --> Menu
+
+    AptMgmt --> AptFrm[Sel pat doc time]
+    AptFrm --> Slots[Chk slots]
+    Slots --> SlotOk{Avail?}
+    SlotOk -->|No| AptErr[Booking err]
+    AptErr --> AptFrm
+    SlotOk -->|Yes| AptSave[Save apt]
+    AptSave --> Menu
+
+    PayMgmt --> SelPat[Sel pat]
+    SelPat --> PayAct{Pay act?}
+    PayAct -->|Bill| BillSave[Upd PBA]
+    PayAct -->|Cost| AddCost[Add cost]
+    PayAct -->|Pay| RecPay[Ins payment]
+    PayAct -->|Rcpt| ViewRcpt[View rcpt]
+    BillSave --> PayMgmt
+    AddCost --> PayMgmt
+    RecPay --> ViewRcpt
+    ViewRcpt --> PayMgmt
+
+    AdmMgmt --> AdmAct{Adm act?}
+    AdmAct -->|New| NewUser[Create user]
+    AdmAct -->|Role| AsgRole[Asg roles]
+    AdmAct -->|Pwd| RstPwd[Rst pwd]
+    NewUser --> Menu
+    AsgRole --> Menu
+    RstPwd --> Menu
+
+    RxFlow --> RxFrm[Enter Rx items]
+    RxFrm --> RxVal{Valid?}
+    RxVal -->|No| RxFrm
+    RxVal -->|Yes| RxSave[Save Rx + items]
+    RxSave --> RxPdf{PDF?}
+    RxPdf -->|Yes| GenPdf[QuestPDF]
+    RxPdf -->|No| Menu
+    GenPdf --> Menu
+
+    GSFlow --> GSStart[Create GS case]
+    GSStart --> GSUp[Up rest + smile img]
+    GSUp --> GSImg{Both imgs?}
+    GSImg -->|No| GSUp
+    GSImg -->|Yes| GSAnlz[GS API analyze]
+    GSAnlz --> GSApi{OK?}
+    GSApi -->|No| GSErr[API err]
+    GSErr --> PatDet
+    GSApi -->|Yes| GSRev[Review AI]
+    GSRev --> GSOvr{Ovr?}
+    GSOvr -->|Y/N| GSClin[Submit clin data]
+    GSClin --> GSDiag[Diag + Tx plan]
+    GSDiag --> GSPdf{PDF?}
+    GSPdf -->|Yes| GSDl[DL GS PDF]
+    GSPdf -->|No| PatDet
+    GSDl --> PatDet
+
+    XRFlow --> XRUp[Up pan and/or ceph]
+    XRUp --> XRImg{Img?}
+    XRImg -->|No| XRUp
+    XRImg -->|Yes| XRPan{Pan?}
+    XRPan -->|Yes| PanAPI[Pan API]
+    XRPan -->|No| XRCeph
+    PanAPI --> XRCeph{Ceph?}
+    XRCeph -->|Yes| CephAPI[CVM + ceph API]
+    XRCeph -->|No| XRSave
+    CephAPI --> XRFull{Pan + ceph?}
+    XRFull -->|Yes| FullAPI[Full-case API]
+    XRFull -->|No| Gemma
+    FullAPI --> Gemma{Gemma?}
+    Gemma -->|Yes| GemAPI[Gemma API]
+    Gemma -->|No| XRSave
+    GemAPI --> XRSave[Save XR case]
+    XRSave --> XRShow[Show results]
+    XRShow --> PatDet
+
+    Menu -->|Out| Logout[Logout]
+    Logout --> Login

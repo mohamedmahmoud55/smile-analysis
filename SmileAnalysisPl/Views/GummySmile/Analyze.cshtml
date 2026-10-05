@@ -1,0 +1,65 @@
+@model SmileAnalysisBl.ViewModels.GummySmileViewModels.GummySmileAnalyzeViewModel
+@{
+    ViewData["Title"] = "Run Analysis";
+}
+
+<div class="cc-page">
+    <div class="pa-analysis-header">
+        <a asp-action="Upload" asp-route-id="@Model.LocalCaseId" class="pa-back-btn" title="Back">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div class="flex-grow-1">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                <h1 class="h4 fw-bold text-dark mb-0">Gummy Smile Analysis</h1>
+                <span class="pa-ai-badge"><i class="bi bi-stars"></i> AI Powered</span>
+            </div>
+            <p class="text-secondary small mb-0">@Model.PatientName · @Model.DisplayId</p>
+        </div>
+    </div>
+
+    <partial name="_WizardSteps" model="Model" />
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger">@Model.ErrorMessage</div>
+    }
+
+    <div class="pa-form-card">
+        <h2 class="h6 fw-bold mb-2">Step 1 — Intake (run AI analysis)</h2>
+        <p class="text-secondary small mb-4">
+            Images uploaded successfully. Run the Gummy Smile AI engine to detect landmarks, measure gingival display, and prepare clinical inputs.
+            This step may take up to a few minutes.
+        </p>
+
+        <div class="pa-ai-status mb-4" id="gummyAiStatus">
+            <i class="bi bi-cpu"></i>
+            <span class="pa-status-text">Ready to analyze</span>
+        </div>
+
+        <form asp-action="Analyze" asp-route-id="@Model.LocalCaseId" method="post" id="analyzeForm">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="All" class="text-danger small mb-3"></div>
+            <div class="d-flex flex-wrap gap-2">
+                <button type="submit" class="btn cc-btn-primary px-4" id="analyzeBtn">
+                    <i class="bi bi-stars me-2"></i>Run AI Analysis
+                </button>
+                <a asp-controller="Patient" asp-action="Details" asp-route-id="@Model.PatientId" class="btn btn-outline-secondary px-4">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('analyzeForm').addEventListener('submit', function () {
+            var btn = document.getElementById('analyzeBtn');
+            var status = document.getElementById('gummyAiStatus');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Analyzing…';
+            if (status) {
+                status.classList.add('pa-ai-status-running');
+                status.querySelector('.pa-status-text').textContent = 'AI analysis in progress…';
+            }
+        });
+    </script>
+}

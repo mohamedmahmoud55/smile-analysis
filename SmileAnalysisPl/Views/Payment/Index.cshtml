@@ -1,0 +1,443 @@
+@model SmileAnalysisBl.ViewModels.PaymentViewModels.PatientBillingPageViewModel
+@using System.Globalization
+@using SmileAnalysisDal.Entities.Enums
+@{
+    ViewData["Title"] = "Payment management";
+    var selId = Model.SelectedPatientId?.ToString(CultureInfo.InvariantCulture) ?? "";
+}
+
+<div class="cc-page">
+    @if (TempData["SuccessMessage"] is string ok)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @ok
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] is string fail)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @fail
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-between gap-3 mb-4">
+        <div>
+            <h2 class="h3 fw-bold text-dark mb-1">Payment management</h2>
+            <p class="text-secondary mb-0 small">Flexible billing: partial payments, add-on costs, and discounts—no fixed installment schedule.</p>
+        </div>
+    </div>
+
+    <form method="get" asp-action="Index" asp-controller="Payment" class="cc-bento-card p-4 mb-4">
+        <label class="form-label small text-secondary text-uppercase fw-semibold" for="patientId-select">Patient</label>
+        <div class="row g-2 align-items-end">
+            <div class="col-md-8 col-lg-6">
+                <select name="patientId" id="patientId-select" class="form-select" onchange="this.form.submit()">
+                    @foreach (var item in Model.Patients)
+                    {
+                        var selected = string.Equals(item.Value, selId, StringComparison.Ordinal);
+                        if (selected)
+                        {
+                            <option value="@item.Value" selected="selected">@item.Text</option>
+                        }
+                        else
+                        {
+                            <option value="@item.Value">@item.Text</option>
+                        }
+                    }
+                </select>
+            </div>
+        </div>
+    </form>
+
+    @if (Model.Summary is { } s)
+    {
+        string F(decimal n) => $"{n.ToString("N2", CultureInfo.InvariantCulture)} EGP";
+
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-xl">
+                <div class="cc-bento-card p-4 h-100">
+                    <p class="small text-secondary text-uppercase fw-semibold mb-1">Total cost</p>
+                    <p class="h4 fw-bold mb-0">@F(s.GrossTotalCost)</p>
+                    <p class="small text-secondary mb-0 mt-2">Base @F(s.BaseTreatmentCost) + extras @F(s.AdditionalCosts)</p>
+                </div>
+            </div>
+            <div class="col-6 col-xl">
+                <div class="cc-bento-card p-4 h-100 border-warning-subtle">
+                    <p class="small text-secondary text-uppercase fw-semibold mb-1">Discount</p>
+                    <p class="h4 fw-bold mb-0 text-warning-emphasis">@(s.DiscountAmountApplied > 0 ? "−" : "")@F(s.DiscountAmountApplied)</p>
+                    <p class="small text-secondary mb-0 mt-2">
+                        @switch (s.DiscountType)
+                        {
+                            case BillingDiscountType.Percent:
+                                @:(@s.DiscountPercent.ToString("N2", CultureInfo.InvariantCulture)% of subtotal)
+                                break;
+                            case BillingDiscountType.FixedAmount:
+                                @:(fixed amount)
+                                break;
+                            default:
+                                @:(none)
+                                break;
+                        }
+                    </p>
+                </div>
+            </div>
+            <div class="col-6 col-xl">
+                <div class="cc-bento-card p-4 h-100 border-primary-subtle">
+                    <p class="small text-secondary text-uppercase fw-semibold mb-1">Net amount due</p>
+                    <p class="h4 fw-bold text-primary mb-0">@F(s.NetAmountDue)</p>
+                    <p class="small text-secondary mb-0 mt-2">After discount</p>
+                </div>
+            </div>
+            <div class="col-6 col-xl">
+                <div class="cc-bento-card p-4 h-100">
+                    <p class="small text-secondary text-uppercase fw-semibold mb-1">Total paid</p>
+                    <p class="h4 fw-bold mb-0 text-success">@F(s.TotalPaid)</p>
+                    <p class="small text-secondary mb-0 mt-2">All recorded payments</p>
+                </div>
+            </div>
+            <div class="col-12 col-xl">
+                <div class="cc-bento-card p-4 h-100 @(s.RemainingBalance > 0 ? "border-danger-subtle" : "border-success-subtle")">
+                    <p class="small text-secondary text-uppercase fw-semibold mb-1">Remaining balance</p>
+                    <p class="h4 fw-bold mb-0 @(s.RemainingBalance > 0 ? "text-danger" : "text-success")">@F(s.RemainingBalance)</p>
+                    <p class="small text-secondary mb-0 mt-2">Net due minus total paid</p>
+                </div>
+            </div>
+        </div>
+
+        @if (s.CanResetForNewCycle)
+        {
+            <div class="cc-settled-banner mb-4">
+                <div class="cc-settled-banner__glow" aria-hidden="true"></div>
+                <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-4 position-relative">
+                    <div class="d-flex align-items-start gap-3 flex-grow-1">
+                        <div class="cc-settled-banner__icon flex-shrink-0">
+                            <i class="bi bi-check2-circle"></i>
+                        </div>
+                        <div>
+                            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                                <h3 class="h6 fw-bold mb-0">Balance settled</h3>
+                                <span class="cc-badge-emerald">Fully paid</span>
+                            </div>
+                            <p class="small text-secondary mb-3 mb-lg-2">
+                                @s.PatientDisplayName has no remaining balance. Start a fresh billing cycle when a new treatment plan begins.
+                            </p>
+                            <div class="d-flex flex-wrap gap-2">
+                                <span class="cc-settled-stat">
+                                    <i class="bi bi-cash-stack text-success"></i>
+                                    @F(s.TotalPaid) paid
+                                </span>
+                                <span class="cc-settled-stat">
+                                    <i class="bi bi-receipt text-primary"></i>
+                                    @s.PaymentHistory.Count payment@(s.PaymentHistory.Count == 1 ? "" : "s")
+                                </span>
+                                <span class="cc-settled-stat">
+                                    <i class="bi bi-tag text-warning"></i>
+                                    @F(s.GrossTotalCost) total cost
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button"
+                            class="btn cc-settled-reset-btn flex-shrink-0"
+                            data-bs-toggle="modal"
+                            data-bs-target="#resetBillingModal"
+                            data-patient-name="@s.PatientDisplayName"
+                            data-payment-count="@s.PaymentHistory.Count"
+                            data-total-paid="@F(s.TotalPaid)">
+                        <i class="bi bi-arrow-repeat me-2"></i>Reset for new billing cycle
+                    </button>
+                </div>
+            </div>
+
+            <div class="modal fade" id="resetBillingModal" tabindex="-1" aria-labelledby="resetBillingModalTitle" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
+                        <div class="modal-header border-0 border-bottom bg-body-tertiary py-3">
+                            <div class="d-flex align-items-center gap-3 flex-grow-1">
+                                <div class="cc-modal-icon cc-modal-icon--danger flex-shrink-0">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                </div>
+                                <div>
+                                    <h2 class="modal-title h5 fw-bold text-dark mb-0" id="resetBillingModalTitle">Reset billing cycle</h2>
+                                    <p class="small text-secondary mb-0">This action cannot be undone.</p>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body py-4">
+                            <p class="text-secondary mb-4" id="resetBillingModalIntro"></p>
+                            <div class="cc-reset-impact mb-4">
+                                <p class="small fw-semibold text-uppercase text-secondary mb-3">What will be cleared</p>
+                                <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
+                                    <li class="cc-reset-impact__item">
+                                        <i class="bi bi-trash3 text-danger"></i>
+                                        <span>All payment records and receipts for this patient</span>
+                                    </li>
+                                    <li class="cc-reset-impact__item">
+                                        <i class="bi bi-sliders text-danger"></i>
+                                        <span>Treatment cost, additional costs, and discounts</span>
+                                    </li>
+                                    <li class="cc-reset-impact__item">
+                                        <i class="bi bi-wallet2 text-danger"></i>
+                                        <span>Current billing totals and balance history</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="cc-reset-summary row g-2">
+                                <div class="col-sm-4">
+                                    <div class="cc-reset-summary__card">
+                                        <span class="cc-reset-summary__label">Patient</span>
+                                        <span class="cc-reset-summary__value" id="resetBillingPatientName"></span>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="cc-reset-summary__card">
+                                        <span class="cc-reset-summary__label">Payments</span>
+                                        <span class="cc-reset-summary__value" id="resetBillingPaymentCount"></span>
+                                    </div>
+                                </div>
+                                <div class="col-sm-4">
+                                    <div class="cc-reset-summary__card">
+                                        <span class="cc-reset-summary__label">Total paid</span>
+                                        <span class="cc-reset-summary__value text-success" id="resetBillingTotalPaid"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="alert alert-warning d-flex align-items-start gap-2 mt-4 mb-0 small">
+                                <i class="bi bi-exclamation-triangle-fill flex-shrink-0 mt-1"></i>
+                                <span>Use this only when starting a completely new case. Historical payment data will be permanently removed.</span>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0 bg-light bg-opacity-50 gap-2">
+                            <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Keep current billing</button>
+                            <form asp-action="ResetBillingForNewCycle" method="post" id="resetBillingModalForm" class="d-inline m-0">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="PatientId" value="@s.PatientId" />
+                                <button type="submit" class="btn btn-danger rounded-pill px-4">
+                                    <i class="bi bi-arrow-repeat me-1"></i>Reset billing cycle
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="cc-bento-card p-4 h-100">
+                    <h3 class="h6 fw-bold mb-3"><i class="bi bi-sliders text-primary me-2"></i>Treatment cost &amp; discount</h3>
+                    <form asp-action="SaveBilling" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="PatientId" value="@s.PatientId" />
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Base treatment cost</label>
+                            <div class="input-group">
+                                <input type="number" step="0.01" min="0" class="form-control font-monospace" name="BaseTreatmentCost" value="@s.BaseTreatmentCost.ToString("0.00", CultureInfo.InvariantCulture)" required />
+                                <span class="input-group-text">EGP</span>
+                            </div>
+                        </div>
+                        <fieldset class="mb-3">
+                            <legend class="form-label small fw-semibold mb-2">Discount</legend>
+                            <div class="d-flex flex-column gap-2">
+                                <label class="d-flex align-items-center gap-2">
+                                    @if (s.DiscountType == BillingDiscountType.None)
+                                    {
+                                        <input type="radio" name="DiscountMode" value="None" class="form-check-input" checked="checked" />
+                                    }
+                                    else
+                                    {
+                                        <input type="radio" name="DiscountMode" value="None" class="form-check-input" />
+                                    }
+                                    <span>None</span>
+                                </label>
+                                <label class="d-flex align-items-center gap-2">
+                                    @if (s.DiscountType == BillingDiscountType.Percent)
+                                    {
+                                        <input type="radio" name="DiscountMode" value="Percent" class="form-check-input" checked="checked" />
+                                    }
+                                    else
+                                    {
+                                        <input type="radio" name="DiscountMode" value="Percent" class="form-check-input" />
+                                    }
+                                    <span>Percentage</span>
+                                </label>
+                                <label class="d-flex align-items-center gap-2">
+                                    @if (s.DiscountType == BillingDiscountType.FixedAmount)
+                                    {
+                                        <input type="radio" name="DiscountMode" value="FixedAmount" class="form-check-input" checked="checked" />
+                                    }
+                                    else
+                                    {
+                                        <input type="radio" name="DiscountMode" value="FixedAmount" class="form-check-input" />
+                                    }
+                                    <span>Fixed amount</span>
+                                </label>
+                            </div>
+                        </fieldset>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Discount % (if percentage)</label>
+                            <div class="input-group">
+                                <input type="number" step="0.01" min="0" max="100" class="form-control font-monospace" name="DiscountPercent" value="@s.DiscountPercent.ToString("0.####", CultureInfo.InvariantCulture)" />
+                                <span class="input-group-text">%</span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Discount fixed (if fixed amount)</label>
+                            <div class="input-group">
+                                <input type="number" step="0.01" min="0" class="form-control font-monospace" name="DiscountFixedAmount" value="@s.DiscountFixedAmount.ToString("0.00", CultureInfo.InvariantCulture)" />
+                                <span class="input-group-text">EGP</span>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save billing</button>
+                    </form>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="cc-bento-card p-4 mb-4">
+                    <h3 class="h6 fw-bold mb-3"><i class="bi bi-plus-circle text-primary me-2"></i>Additional cost</h3>
+                    <p class="small text-secondary mb-3">Adds to total cost (materials, lab fees, etc.). Current extras: <strong>@F(s.AdditionalCosts)</strong></p>
+                    <form asp-action="AddAdditionalCost" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="PatientId" value="@s.PatientId" />
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Amount to add</label>
+                            <div class="input-group">
+                                <input type="number" step="0.01" min="0.01" class="form-control font-monospace" name="Amount" required />
+                                <span class="input-group-text">EGP</span>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-outline-primary">Add to total cost</button>
+                    </form>
+                </div>
+                <div class="cc-bento-card p-4">
+                    <h3 class="h6 fw-bold mb-3"><i class="bi bi-cash-coin text-primary me-2"></i>Record payment</h3>
+                    @if (s.RemainingBalance > 0)
+                    {
+                        <p class="small text-secondary mb-3">Record a partial or full payment up to the remaining balance of <strong>@F(s.RemainingBalance)</strong>.</p>
+                        <form asp-action="RecordPayment" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="PatientId" value="@s.PatientId" />
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Amount</label>
+                                <div class="input-group">
+                                    <input type="number" step="0.01" min="0.01" max="@s.RemainingBalance.ToString("0.00", CultureInfo.InvariantCulture)" class="form-control font-monospace" name="Amount" required />
+                                    <span class="input-group-text">EGP</span>
+                                </div>
+                                <div class="form-text">Maximum allowed: @F(s.RemainingBalance)</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold" for="pay-date">Payment date</label>
+                                <input type="date" class="form-control" id="pay-date" name="PaymentDate" value="@DateTime.Today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)" required />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold">Method</label>
+                                <select class="form-select" name="Method">
+                                    <option value="@((int)PaymentMethod.Card)">Card</option>
+                                    <option value="@((int)PaymentMethod.Cash)">Cash</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-success">Record payment</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <p class="small text-success mb-0">
+                            <i class="bi bi-check-circle me-1"></i>
+                            No remaining balance. Add treatment costs or use reset when starting a new billing cycle.
+                        </p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <section class="mt-4 cc-bento-card overflow-hidden">
+            <div class="px-4 py-3 border-bottom">
+                <h4 class="fw-bold mb-0">Payment history — @s.PatientDisplayName</h4>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 small">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="text-secondary fw-semibold">Receipt</th>
+                            <th class="text-secondary fw-semibold">Date</th>
+                            <th class="text-secondary fw-semibold text-end">Amount</th>
+                            <th class="text-secondary fw-semibold">Method</th>
+                            <th class="text-secondary fw-semibold">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in s.PaymentHistory)
+                        {
+                            <tr>
+                                <td>
+                                    <a class="font-monospace" asp-action="Receipt" asp-route-id="@row.PaymentId" target="_blank" rel="noopener">@row.TransactionDisplayId</a>
+                                </td>
+                                <td class="text-secondary">@row.PaymentDate.ToLocalTime().ToString("MMM d, yyyy", CultureInfo.InvariantCulture)</td>
+                                <td class="text-end fw-bold">@F(row.Amount)</td>
+                                <td>@row.Method</td>
+                                <td>
+                                    @if (row.Status == PaymentStatus.Paid)
+                                    {
+                                        <span class="badge rounded-pill bg-success-subtle text-success">Paid</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge rounded-pill bg-secondary-subtle text-secondary">@row.Status</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                        @if (s.PaymentHistory.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="5" class="text-center text-secondary py-5">No payments yet for this patient.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    }
+    else if (Model.SelectedPatientId is > 0)
+    {
+        <div class="alert alert-warning">Patient not found.</div>
+    }
+    else
+    {
+        <div class="cc-bento-card p-5 text-center text-secondary">
+            <i class="bi bi-person-lines-fill display-4 d-block mb-3 opacity-50"></i>
+            <p class="mb-0">Select a patient to manage billing, discounts, and payments.</p>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    @if (Model.Summary is { CanResetForNewCycle: true })
+    {
+        <script>
+            document.getElementById('resetBillingModal')?.addEventListener('show.bs.modal', function (event) {
+                const trigger = event.relatedTarget;
+                if (!trigger) return;
+
+                const name = trigger.getAttribute('data-patient-name') || 'this patient';
+                const count = trigger.getAttribute('data-payment-count') || '0';
+                const totalPaid = trigger.getAttribute('data-total-paid') || '';
+
+                const intro = document.getElementById('resetBillingModalIntro');
+                const patientEl = document.getElementById('resetBillingPatientName');
+                const countEl = document.getElementById('resetBillingPaymentCount');
+                const paidEl = document.getElementById('resetBillingTotalPaid');
+
+                if (intro) {
+                    intro.textContent = 'Reset billing for "' + name + '"? You will start with a clean slate for the next treatment cycle.';
+                }
+                if (patientEl) patientEl.textContent = name;
+                if (countEl) countEl.textContent = count + (count === '1' ? ' payment' : ' payments');
+                if (paidEl) paidEl.textContent = totalPaid;
+            });
+        </script>
+    }
+}

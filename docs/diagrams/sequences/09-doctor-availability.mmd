@@ -1,0 +1,41 @@
+sequenceDiagram
+    actor SuperAdmin
+    participant Browser
+    participant MVC as DoctorController
+    participant Svc as DoctorService
+    participant UoW as UnitOfWork
+    participant DB as SQL Server
+
+    SuperAdmin->>Browser: Open Doctor/SchedulePicker
+    Browser->>MVC: GET SchedulePicker
+    MVC->>Svc: GetDoctorsForSchedule()
+    Svc->>DB: SELECT Doctors
+    Svc-->>MVC: doctor list
+    MVC-->>Browser: Doctor selection page
+
+    SuperAdmin->>Browser: Select doctor
+    Browser->>MVC: GET Availability(doctorId)
+    MVC->>Svc: GetAvailabilityPage(doctorId)
+    Svc->>DB: SELECT DoctorAvailabilities
+    Svc-->>MVC: availability view model
+    MVC-->>Browser: Weekly schedule form
+
+    SuperAdmin->>Browser: Add availability slot
+    Browser->>MVC: POST AddAvailability
+    MVC->>MVC: Validate slot times
+
+    MVC->>Svc: AddAvailability(model)
+    Svc->>UoW: Add DoctorAvailability
+    UoW->>DB: INSERT DoctorAvailabilities
+    DB-->>Svc: new slot Id
+    Svc-->>MVC: success
+    MVC-->>Browser: Redirect Availability page
+
+    SuperAdmin->>Browser: Open Doctor/Schedule(doctorId)
+    Browser->>MVC: GET Schedule
+    MVC->>Svc: GetScheduleView(doctorId)
+    Svc->>DB: SELECT Availabilities and Appointments
+    Svc-->>MVC: calendar view model
+    MVC-->>Browser: Schedule grid
+
+    Note over SuperAdmin,DB: AppointmentController uses these slots via GetAvailableSlots when booking

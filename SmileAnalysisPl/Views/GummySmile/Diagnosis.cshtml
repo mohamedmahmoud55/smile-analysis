@@ -1,0 +1,183 @@
+@using SmileAnalysisBl.GummySmile
+@model SmileAnalysisBl.ViewModels.GummySmileViewModels.GummySmileDiagnosisViewModel
+@{
+    ViewData["Title"] = "Diagnosis";
+    var gsCase = Model.Case;
+    var diagnosis = gsCase?.Diagnosis;
+    var measurements = gsCase?.Measurements;
+    var severityColor = GsEtiologyCatalog.SeverityColor(diagnosis?.Severity);
+    double? Val(string key) => GummySmileDisplayHelpers.SummaryValue(diagnosis, key);
+}
+
+<div class="cc-page">
+    <div class="pa-analysis-header">
+        <a asp-action="Clinical" asp-route-id="@Model.LocalCaseId" class="pa-back-btn" title="Back">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div class="flex-grow-1">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                <h1 class="h4 fw-bold text-dark mb-0">Gummy Smile Analysis</h1>
+                <span class="pa-ai-badge"><i class="bi bi-stars"></i> AI Powered</span>
+            </div>
+            <p class="text-secondary small mb-0">@Model.PatientName · @Model.DisplayId</p>
+        </div>
+    </div>
+
+    <partial name="_WizardSteps" model="Model" />
+
+    @if (!Model.IsReady)
+    {
+        <div class="alert alert-info">
+            Enter clinical inputs and compute the diagnosis first.
+            <a asp-action="Clinical" asp-route-id="@Model.LocalCaseId" class="alert-link ms-1">Go to clinical form</a>
+        </div>
+    }
+    else
+    {
+        <!-- Card 1: Diagnosis summary -->
+        <div class="gs-clinical-card">
+            <h2>Diagnosis summary</h2>
+            <p class="gs-clinical-subtitle">Seven-step diagnostic scheme (El-Bokle &amp; Abdel Ghany).</p>
+
+            <div class="gs-stat-grid gs-stat-grid-3 mb-3">
+                <div class="gs-stat-box">
+                    <div class="gs-stat-label">Max gingival display</div>
+                    <div class="gs-stat-value" style="color:@severityColor">@(measurements?.MaxGdMm?.ToString("0.#") ?? "—") mm</div>
+                </div>
+                <div class="gs-stat-box">
+                    <div class="gs-stat-label">Severity</div>
+                    <div class="gs-stat-value" style="color:@severityColor">@(diagnosis?.Severity ?? "—")</div>
+                </div>
+                <div class="gs-stat-box">
+                    <div class="gs-stat-label">Distribution</div>
+                    <div class="gs-stat-value">@(diagnosis?.Distribution ?? measurements?.Distribution ?? "—")</div>
+                </div>
+            </div>
+
+            <div class="gs-stat-grid gs-stat-grid-6 mb-3">
+                <div class="gs-stat-box">
+                    <div class="gs-stat-label">Short upper lip</div>
+                    <div class="gs-stat-value" style="color:#4285F4">@(Val("short_lip_mm")?.ToString("0.#") ?? diagnosis?.ShortLipMm.ToString("0.#") ?? "—") mm</div>
+                </div>
+                <div class="gs-stat-box">
+                    <div class="gs-stat-label">Lip hypermobility</div>
+                    <div class="gs-stat-value" style="color:#34A853">@(Val("hypermobility_mm")?.ToString("0.#") ?? diagnosis?.HypermobilityMm.ToString("0.#") ?? "—") mm</div>
+                </div>
+                <div class="gs-stat-box">
+                    <div class="gs-stat-label">Max gingival excess</div>
+                    <div class="gs-stat-value" style="color:#EA4335">@(Val("max_gingival_excess_mm")?.ToString("0.#") ?? "—") mm</div>
+                </div>
+                <div class="gs-stat-box">
+                    <div class="gs-stat-label">Incisor extrusion</div>
+                    <div class="gs-stat-value" style="color:#9C27B0">@(Val("extrusion_mm")?.ToString("0.#") ?? diagnosis?.ExtrusionMm.ToString("0.#") ?? "—") mm</div>
+                </div>
+                <div class="gs-stat-box">
+                    <div class="gs-stat-label">Retroclination</div>
+                    <div class="gs-stat-value" style="color:#FF9800">@(Val("retroclination_mm")?.ToString("0.#") ?? "—") mm</div>
+                </div>
+                <div class="gs-stat-box">
+                    <div class="gs-stat-label">Max VME (residual)</div>
+                    <div class="gs-stat-value" style="color:#FBBC05">@(Val("max_vme_mm")?.ToString("0.#") ?? "—") mm</div>
+                </div>
+            </div>
+
+            <div class="gs-stat-box d-inline-block mb-2">
+                <div class="gs-stat-label">Facial pattern</div>
+                <div class="gs-stat-value">@(diagnosis?.FacialPattern ?? "—")</div>
+            </div>
+
+            <div class="gs-badge-row">
+                @if (diagnosis?.RetroclinationPresent == true)
+                {
+                    <span class="gs-etiology-badge">Retroclined incisors</span>
+                }
+                @if (diagnosis?.ProclinationPresent == true)
+                {
+                    <span class="gs-etiology-badge">Proclined incisors</span>
+                }
+                @if (diagnosis?.VmePresent == true)
+                {
+                    <span class="gs-etiology-badge">VME present</span>
+                }
+                @if (!string.IsNullOrEmpty(diagnosis?.CrownRatioNote))
+                {
+                    <span class="gs-etiology-badge">@diagnosis.CrownRatioNote</span>
+                }
+            </div>
+
+            @foreach (var warning in (diagnosis?.Warnings ?? []).Concat(measurements?.Warnings ?? []).Distinct())
+            {
+                <div class="alert alert-warning small mt-3 mb-0">@warning</div>
+            }
+        </div>
+
+        <!-- Card 2: Tooth chart + overlay -->
+        <div class="row g-3 mb-3">
+            <div class="col-12 col-lg-6">
+                <div class="gs-clinical-card h-100">
+                    <h2>Per-tooth etiology decomposition</h2>
+                    <p class="gs-clinical-subtitle">Stacked contribution by etiology (mm).</p>
+                    <div class="gs-chart-wrap">
+                        <canvas id="gsToothChart" data-chart="@Model.ToothChartJson"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-lg-6">
+                <div class="gs-clinical-card h-100">
+                    <h2>Annotated smile</h2>
+                    @if (!string.IsNullOrEmpty(Model.SmileOverlayPath))
+                    {
+                        @if (Model.SmileImageIsOriginal)
+                        {
+                            <p class="text-secondary small mb-2">Original photo — annotated overlay is unavailable for this archived analysis.</p>
+                        }
+                        <img class="gs-overlay-img" alt="Smile overlay"
+                             src="@Url.Action("Asset", new { id = Model.LocalCaseId, path = Model.SmileOverlayPath })" />
+                    }
+                    else
+                    {
+                        <p class="text-secondary small mb-0">Annotated overlay is not available. The AI image was not stored locally for this analysis.</p>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 3: Measurements table -->
+        <div class="gs-clinical-card">
+            <h2>Measurements (Table 1 template)</h2>
+            <div class="table-responsive">
+                <table class="table table-sm gs-measure-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Assessment</th>
+                            <th>Measured</th>
+                            <th>Norm</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model.MeasurementRows)
+                        {
+                            <tr>
+                                <td>@row.Assessment</td>
+                                <td class="fw-semibold">@row.Measured</td>
+                                <td class="text-secondary">@row.Norm</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+            <a asp-action="Treatment" asp-route-id="@Model.LocalCaseId" class="btn cc-btn-primary px-4">
+                View treatment plan <i class="bi bi-arrow-right ms-2"></i>
+            </a>
+            <a asp-controller="Patient" asp-action="Details" asp-route-id="@Model.PatientId" class="btn btn-outline-secondary px-4">Back to patient</a>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="~/js/gummy-smile-tooth-chart.js" asp-append-version="true"></script>
+}

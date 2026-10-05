@@ -1,0 +1,135 @@
+@using Microsoft.AspNetCore.Identity
+@using SmileAnalysisDal.Entities
+@inject UserManager<ApplicationUser> UserManager
+@{
+    
+    ApplicationUser? appUser = null;
+    var displayName = "User";
+    var roleLabel = "Clinical Suite";
+    var initials = "U";
+
+    if (User.Identity?.IsAuthenticated == true)
+    {
+        appUser = await UserManager.GetUserAsync(User);
+        if (appUser != null)
+        {
+            displayName = $"{appUser.FirstName} {appUser.LastName}".Trim();
+            if (string.IsNullOrEmpty(displayName))
+                displayName = appUser.UserName ?? appUser.Email ?? "User";
+
+            if (!string.IsNullOrWhiteSpace(appUser.FirstName) && !string.IsNullOrWhiteSpace(appUser.LastName))
+                initials = $"{char.ToUpperInvariant(appUser.FirstName[0])}{char.ToUpperInvariant(appUser.LastName[0])}";
+            else if (!string.IsNullOrWhiteSpace(appUser.FirstName) && appUser.FirstName.Length >= 2)
+                initials = appUser.FirstName[..2].ToUpperInvariant();
+            else if (!string.IsNullOrWhiteSpace(appUser.FirstName))
+                initials = char.ToUpperInvariant(appUser.FirstName[0]).ToString();
+            else if (!string.IsNullOrWhiteSpace(appUser.Email) && appUser.Email.Length >= 2)
+                initials = appUser.Email[..2].ToUpperInvariant();
+
+            if (User.IsInRole("SuperAdmin")) roleLabel = "Super admin";
+            else if (User.IsInRole("Admin")) roleLabel = "Administrator";
+            else if (User.IsInRole("Doctor")) roleLabel = "Doctor";
+            else if (User.IsInRole("Staff")) roleLabel = "Staff";
+            else roleLabel = "Clinical user";
+        }
+    }
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/dashboard-ortho.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/clinical-cobalt-pages.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/patient-analysis.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/gummy-smile-clinical.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+    <title>AI Ortho | @ViewData["Title"]</title>
+</head>
+<body class="ortho-body">
+    <div class="d-flex ortho-app">
+        <!-- Desktop sidebar -->
+        <aside class="ortho-sidebar d-none d-lg-flex flex-column vh-100">
+            <div class="ortho-sidebar-header d-flex align-items-center gap-3 px-4">
+                <div class="ortho-logo-mark">
+                    <i class="bi bi-hospital"></i>
+                </div>
+                <div>
+                    <h1 class="text-white fw-bold fs-6 mb-0 lh-sm">DentAI</h1>
+                    <p class="text-secondary small mb-0 mt-1" style="color: var(--ortho-slate-400) !important; font-size: 0.7rem;">Clinical Suite</p>
+                </div>
+            </div>
+            <partial name="_OrthoNavItems" />
+            <div class="ortho-sidebar-profile mt-auto">
+                <div class="ortho-user-card mb-2">
+                    <div class="ortho-user-avatar">@initials</div>
+                    <div class="text-truncate">
+                        <p class="text-white small fw-medium mb-0 text-truncate">@displayName</p>
+                        <p class="mb-0 text-truncate" style="color: var(--ortho-slate-400); font-size: 0.7rem;">@roleLabel</p>
+                    </div>
+                </div>
+                <form asp-controller="Account" asp-action="Logout" method="post" class="d-grid">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-sm btn-outline-light border-secondary text-white-50">
+                        <i class="bi bi-box-arrow-right me-1"></i> Log out
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- Mobile offcanvas -->
+        <div class="offcanvas offcanvas-start ortho-offcanvas d-lg-none" tabindex="-1" id="orthoSidebarOffcanvas" aria-labelledby="orthoSidebarLabel">
+            <div class="offcanvas-header border-bottom border-secondary border-opacity-25">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="ortho-logo-mark"><i class="bi bi-hospital"></i></div>
+                    <div>
+                        <h2 class="text-white fs-6 fw-bold mb-0" id="orthoSidebarLabel">AI Ortho</h2>
+                        <p class="mb-0 small" style="color: var(--ortho-slate-400);">Clinical Suite</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body d-flex flex-column p-0">
+                <partial name="_OrthoNavItems" />
+                <div class="ortho-sidebar-profile mt-auto border-0">
+                    <div class="ortho-user-card mb-2">
+                        <div class="ortho-user-avatar">@initials</div>
+                        <div class="text-truncate">
+                            <p class="text-white small fw-medium mb-0 text-truncate">@displayName</p>
+                            <p class="mb-0 text-truncate" style="color: var(--ortho-slate-400); font-size: 0.7rem;">@roleLabel</p>
+                        </div>
+                    </div>
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="d-grid">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-sm btn-outline-light border-secondary text-white-50">Log out</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="ortho-main-wrap flex-grow-1 d-flex flex-column min-vh-100">
+            <div class="d-lg-none ortho-mobile-bar d-flex align-items-center gap-2 px-3 py-2">
+                <button class="btn btn-link text-white p-0 border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#orthoSidebarOffcanvas" aria-controls="orthoSidebarOffcanvas">
+                    <i class="bi bi-list fs-4"></i>
+                </button>
+                <span class="fw-bold">AI Ortho</span>
+            </div>
+            <div class="flex-grow-1 overflow-auto">
+                <div class="container-fluid py-3 py-lg-4 px-3 px-lg-4">
+                    @RenderBody()
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

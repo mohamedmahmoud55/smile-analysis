@@ -1,0 +1,37 @@
+flowchart TD
+    Start([User opens Patients]) --> Role{User role?}
+
+    Role -->|SuperAdmin Staff| AllPatients[View all patients]
+    Role -->|Doctor| DoctorPatients[View only linked patients]
+    Role -->|Admin| AllPatients
+
+    AllPatients --> Action{Action?}
+    DoctorPatients --> Action
+
+    Action -->|Create| CreateForm[Open Create form]
+    Action -->|View| Details[Open Patient Details]
+    Action -->|Edit| EditForm[Open Edit form]
+    Action -->|Delete| DeleteCheck{Has blocking records?}
+
+    CreateForm --> ValidateCreate{Valid data?}
+    ValidateCreate -->|No| CreateForm
+    ValidateCreate -->|Yes| SavePatient[Save Patient and Clinical History]
+    SavePatient --> Details
+
+    EditForm --> ValidateEdit{Valid data?}
+    ValidateEdit -->|No| EditForm
+    ValidateEdit -->|Yes| UpdatePatient[Update patient record]
+    UpdatePatient --> Details
+
+    DeleteCheck -->|Yes| Error[Show delete error]
+    DeleteCheck -->|No| Remove[Delete patient]
+    Error --> AllPatients
+    Remove --> AllPatients
+
+    Details --> AIChoice{Start analysis?}
+    AIChoice -->|Gummy Smile| GS[Go to Gummy Smile wizard]
+    AIChoice -->|X-Ray| XR[Go to X-Ray analysis]
+    AIChoice -->|No| End([Done])
+
+    GS --> End
+    XR --> End

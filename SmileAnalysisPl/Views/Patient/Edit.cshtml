@@ -1,0 +1,74 @@
+@using SmileAnalysisDal.Entities.Enums
+@model SmileAnalysisBl.ViewModels.PatientViewModels.EditPatientViewModel
+@{
+    ViewData["Title"] = "Edit patient";
+}
+
+<div class="cc-page">
+    <div class="mb-4">
+        <a asp-action="Index" class="text-decoration-none small text-secondary"><i class="bi bi-arrow-left me-1"></i>Back to patient records</a>
+        <h2 class="h4 fw-bold text-dark mt-2 mb-0">Edit patient</h2>
+    </div>
+
+    <div class="cc-bento-card p-4" style="max-width: 52rem;">
+        <form asp-action="Edit" method="post" class="row g-3">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="col-md-6">
+                <label asp-for="FirstName" class="form-label"></label>
+                <input asp-for="FirstName" class="form-control" />
+                <span asp-validation-for="FirstName" class="text-danger"></span>
+            </div>
+            <div class="col-md-6">
+                <label asp-for="LastName" class="form-label"></label>
+                <input asp-for="LastName" class="form-control" />
+                <span asp-validation-for="LastName" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="Gender" class="form-label"></label>
+                <select asp-for="Gender" class="form-select" asp-items="Html.GetEnumSelectList<Gender>()"></select>
+                <span asp-validation-for="Gender" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <label asp-for="DateOfBirth" class="form-label"></label>
+                <input asp-for="DateOfBirth" class="form-control" type="date" />
+                <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+            </div>
+            <div class="col-md-4">
+                <div class="cc-intl-phone-field">
+                    <label asp-for="Phone" class="form-label"></label>
+                    <input asp-for="Phone" class="form-control cc-intl-phone" type="tel" autocomplete="tel" />
+                    <span class="text-danger cc-phone-error" role="alert"></span>
+                    <span asp-validation-for="Phone" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="col-12">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div class="col-12 mt-2">
+                <h3 class="h6 fw-bold text-dark border-bottom pb-2 mb-0">Clinical history</h3>
+            </div>
+            <div class="col-12">
+                @Html.EditorFor(m => m.Clinical)
+            </div>
+
+            <div class="col-12 d-flex gap-2 pt-2">
+                <button type="submit" class="btn cc-btn-primary">Save changes</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Styles {
+    <partial name="_FormInputStylesPartial" />
+}
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <partial name="_FormInputScriptsPartial" />
+}

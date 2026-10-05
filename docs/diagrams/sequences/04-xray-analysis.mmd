@@ -1,0 +1,55 @@
+sequenceDiagram
+    actor Doctor
+    participant MVC as XRayAnalysisController
+    participant Svc as XRayAnalysisCaseService
+    participant API as XRayAnalysisApiService
+    participant Cloud as X-Ray Analysis API
+    participant DB as SQL Server
+
+    Doctor->>MVC: GET Analyze(patientId)
+    MVC->>MVC: CanAccessPatientAsync
+    MVC->>Svc: GetAnalysisPage(patientId)
+    Svc->>DB: SELECT Patient
+    Svc-->>MVC: XRayAnalysisPageViewModel
+    MVC-->>Doctor: Upload form
+
+    Doctor->>MVC: POST panoramic and/or ceph images
+    MVC->>MVC: Validate at least one image
+
+    MVC->>Svc: RunAnalysisAsync(patientId, streams, runDentalGemma)
+
+    opt Panoramic image provided
+        Svc->>API: AnalyzePanoramicAsync()
+        API->>Cloud: POST api/analyze/panoramic
+        Cloud-->>API: Panoramic findings and detections
+    end
+
+    opt Cephalogram provided
+        Svc->>API: AnalyzeCephLandmarksAsync()
+        API->>Cloud: POST api/analyze/ceph-landmarks
+        Cloud-->>API: Landmark coordinates
+
+        Svc->>API: AnalyzeCvmAsync()
+        API->>Cloud: POST api/analyze/cvm
+        Cloud-->>API: CVM stage
+
+        Svc->>API: AnalyzeCephAsync(landmarks, cvmStage)
+        API->>Cloud: POST api/analyze/ceph
+        Cloud-->>API: SNA SNB ANB skeletal class
+    end
+
+    opt Panoramic and ceph summary available
+        Svc->>API: AnalyzeFullCaseAsync()
+        API->>Cloud: POST api/analyze/full-case
+        Cloud-->>API: Integrated treatment logic
+    end
+
+    opt runDentalGemma is true
+        Svc->>API: AnalyzeDentalGemmaReportAsync()
+        API->>Cloud: POST api/analyze/dentalgemma-report
+        Cloud-->>API: Narrative radiology report
+    end
+
+    Svc->>DB: INSERT XRayAnalysisCase with ResultsJson
+    Svc-->>MVC: caseId
+    MVC-->>Doctor: Redirect Analyze with results overlays

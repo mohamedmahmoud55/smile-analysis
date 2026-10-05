@@ -1,0 +1,46 @@
+sequenceDiagram
+    actor Doctor
+    participant MVC as GummySmileController
+    participant Svc as GummySmileCaseService
+    participant API as GummySmileApiService
+    participant Cloud as Gummy Smile API
+    participant DB as SQL Server
+
+    Doctor->>MVC: Start analysis for patient
+    MVC->>Svc: StartCaseAsync(patientId)
+    Svc->>API: CreateCaseAsync()
+    API->>Cloud: POST api/cases
+    Cloud-->>API: GsCaseDto
+    API-->>Svc: case id
+    Svc->>DB: Insert GummySmileCase
+    Svc-->>MVC: localCaseId
+    MVC-->>Doctor: Redirect to Upload
+
+    Doctor->>MVC: Upload rest and smile images
+    MVC->>Svc: UploadImagesAsync()
+    Svc->>API: UploadImageAsync(rest)
+    API->>Cloud: POST api/cases/id/images
+    Svc->>API: UploadImageAsync(smile)
+    API->>Cloud: POST api/cases/id/images
+    Svc->>DB: Save image bytes
+    MVC-->>Doctor: Redirect to Analyze
+
+    Doctor->>MVC: Run analysis
+    MVC->>Svc: RunAnalysisAsync()
+    Svc->>API: AnalyzeAsync()
+    API->>Cloud: POST api/cases/id/analyze
+    Cloud-->>API: AI results
+    Svc->>DB: Update case snapshot JSON
+    MVC-->>Doctor: Show Review page
+
+    Doctor->>MVC: Submit clinical data and overrides
+    MVC->>Svc: Save clinical and overrides
+    Svc->>API: UpdateClinical / UpdateOverrides
+    Svc->>DB: Persist clinical JSON
+    MVC-->>Doctor: Diagnosis and Treatment views
+
+    Doctor->>MVC: Download PDF report
+    MVC->>Svc: GetReportPdfAsync()
+    Svc->>API: GET api/cases/id/report.pdf
+    API->>Cloud: Fetch PDF
+    Cloud-->>Doctor: PDF file download

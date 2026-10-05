@@ -1,0 +1,158 @@
+flowchart TB
+    %% ─── Actors (outside system boundary) ───
+    SA[SuperAdmin]
+    AD[Admin]
+    DR[Doctor]
+    ST[Staff]
+    GSAPI[[Gummy Smile API]]
+    XRAPI[[X-Ray Analysis API]]
+
+    subgraph SYS["SmileAnalysis System"]
+        direction TB
+
+        %% Shared / included use cases
+        UC_Auth([Authenticate User])
+        UC_Role([Validate Role Access])
+        UC_ValForm([Validate Form Input])
+        UC_Persist([Persist to Database])
+        UC_Upload([Upload Images])
+        UC_CallAI([Call External AI API])
+        UC_CheckSlot([Check Doctor Availability])
+
+        %% Primary use cases
+        UC_Login([Login to System])
+        UC_Dash([View Dashboard Analytics])
+        UC_Users([Manage Users and Roles])
+        UC_Pat([Manage Patients])
+        UC_Doc([Manage Doctors])
+        UC_Staff([Manage Staff])
+        UC_Apt([Manage Appointments])
+        UC_Pay([Manage Billing and Payments])
+        UC_Rx([Manage Prescriptions])
+        UC_GS([Run Gummy Smile Analysis])
+        UC_XR([Run X-Ray Analysis])
+
+        %% Extended use cases (optional branches)
+        UC_ResetPw([Reset User Password])
+        UC_AssignRole([Assign Roles to User])
+        UC_CancelApt([Cancel Appointment])
+        UC_Receipt([View Payment Receipt])
+        UC_RxPdf([Download Prescription PDF])
+        UC_GSPdf([Download Gummy Smile PDF])
+        UC_Override([Apply Clinician Overrides])
+        UC_DentalGemma([Generate DentalGemma Report])
+        UC_DocSchedule([View Doctor Schedule])
+    end
+
+    %% ─── Actor associations ───
+    SA --> UC_Login
+    SA --> UC_Dash
+    SA --> UC_Users
+    SA --> UC_Pat
+    SA --> UC_Doc
+    SA --> UC_Staff
+    SA --> UC_Apt
+    SA --> UC_Pay
+    SA --> UC_Rx
+    SA --> UC_GS
+    SA --> UC_XR
+
+    AD --> UC_Login
+    AD --> UC_Dash
+    AD --> UC_Pat
+    AD --> UC_Doc
+    AD --> UC_Staff
+    AD --> UC_Apt
+    AD --> UC_Pay
+
+    DR --> UC_Login
+    DR --> UC_Pat
+    DR --> UC_DocSchedule
+    DR --> UC_Rx
+    DR --> UC_GS
+    DR --> UC_XR
+
+    ST --> UC_Login
+    ST --> UC_Pat
+    ST --> UC_Apt
+    ST --> UC_Pay
+
+    %% External systems
+    UC_CallAI --> GSAPI
+    UC_CallAI --> XRAPI
+
+    %% ─── Include relationships (mandatory sub-flows) ───
+    %% arrow: base use case ..>> included use case
+    UC_Login -.->|<<include>>| UC_Auth
+
+    UC_Dash -.->|<<include>>| UC_Auth
+    UC_Dash -.->|<<include>>| UC_Role
+
+    UC_Users -.->|<<include>>| UC_Auth
+    UC_Users -.->|<<include>>| UC_Role
+    UC_Users -.->|<<include>>| UC_ValForm
+    UC_Users -.->|<<include>>| UC_Persist
+
+    UC_Pat -.->|<<include>>| UC_Auth
+    UC_Pat -.->|<<include>>| UC_Role
+    UC_Pat -.->|<<include>>| UC_ValForm
+    UC_Pat -.->|<<include>>| UC_Persist
+
+    UC_Doc -.->|<<include>>| UC_Auth
+    UC_Doc -.->|<<include>>| UC_Role
+    UC_Doc -.->|<<include>>| UC_ValForm
+    UC_Doc -.->|<<include>>| UC_Persist
+
+    UC_Staff -.->|<<include>>| UC_Auth
+    UC_Staff -.->|<<include>>| UC_Role
+    UC_Staff -.->|<<include>>| UC_ValForm
+    UC_Staff -.->|<<include>>| UC_Persist
+
+    UC_Apt -.->|<<include>>| UC_Auth
+    UC_Apt -.->|<<include>>| UC_Role
+    UC_Apt -.->|<<include>>| UC_ValForm
+    UC_Apt -.->|<<include>>| UC_CheckSlot
+    UC_Apt -.->|<<include>>| UC_Persist
+
+    UC_Pay -.->|<<include>>| UC_Auth
+    UC_Pay -.->|<<include>>| UC_Role
+    UC_Pay -.->|<<include>>| UC_ValForm
+    UC_Pay -.->|<<include>>| UC_Persist
+
+    UC_Rx -.->|<<include>>| UC_Auth
+    UC_Rx -.->|<<include>>| UC_Role
+    UC_Rx -.->|<<include>>| UC_ValForm
+    UC_Rx -.->|<<include>>| UC_Persist
+
+    UC_GS -.->|<<include>>| UC_Auth
+    UC_GS -.->|<<include>>| UC_Role
+    UC_GS -.->|<<include>>| UC_Upload
+    UC_GS -.->|<<include>>| UC_CallAI
+    UC_GS -.->|<<include>>| UC_Persist
+
+    UC_XR -.->|<<include>>| UC_Auth
+    UC_XR -.->|<<include>>| UC_Role
+    UC_XR -.->|<<include>>| UC_Upload
+    UC_XR -.->|<<include>>| UC_CallAI
+    UC_XR -.->|<<include>>| UC_Persist
+
+    UC_DocSchedule -.->|<<include>>| UC_Auth
+    UC_DocSchedule -.->|<<include>>| UC_Role
+
+    %% ─── Extend relationships (optional extensions) ───
+    %% arrow: extending use case ..>> base use case
+    UC_ResetPw -.->|<<extend>>| UC_Users
+    UC_AssignRole -.->|<<extend>>| UC_Users
+
+    UC_CancelApt -.->|<<extend>>| UC_Apt
+
+    UC_Receipt -.->|<<extend>>| UC_Pay
+
+    UC_RxPdf -.->|<<extend>>| UC_Rx
+
+    UC_GSPdf -.->|<<extend>>| UC_GS
+    UC_Override -.->|<<extend>>| UC_GS
+
+    UC_DentalGemma -.->|<<extend>>| UC_XR
+
+    UC_DocSchedule -.->|<<extend>>| UC_Doc

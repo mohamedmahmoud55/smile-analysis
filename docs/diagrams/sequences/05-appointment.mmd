@@ -1,0 +1,39 @@
+sequenceDiagram
+    actor Staff
+    participant Browser
+    participant MVC as AppointmentController
+    participant Svc as AppointmentService
+    participant UoW as UnitOfWork
+    participant DB as SQL Server
+
+    Staff->>Browser: Open Appointment/Create
+    Browser->>MVC: GET Create(patientId?)
+    MVC->>Svc: GetCreateForm(patientId)
+    Svc->>DB: SELECT Patients Doctors Staff
+    Svc-->>MVC: CreateAppointmentViewModel
+    MVC-->>Browser: Appointment form
+
+    Staff->>Browser: Select doctor and date
+    Browser->>MVC: GET GetAvailableSlots(doctorId, date)
+    MVC->>Svc: GetAvailableSlotStarts()
+    Svc->>DB: SELECT DoctorAvailabilities existing Appointments
+    Svc-->>MVC: available time slots
+    MVC-->>Browser: JSON slots list
+
+    Staff->>Browser: Submit appointment details
+    Browser->>MVC: POST Create
+    MVC->>MVC: Validate ModelState
+
+    alt Invalid or slot conflict
+        MVC->>Svc: TryCreate returns false
+        Svc-->>MVC: error message
+        MVC-->>Browser: Form with error
+    else Valid booking
+        MVC->>Svc: TryCreate(model)
+        Svc->>UoW: Add Appointment entity
+        UoW->>DB: INSERT Appointments
+        DB-->>UoW: appointment Id
+        Svc-->>MVC: success
+        MVC-->>Browser: Redirect Appointment/Index
+        Browser-->>Staff: Success message and appointment list
+    end

@@ -1,0 +1,20 @@
+flowchart TD
+    Start([Doctor opens X-Ray Analysis]) --> Upload[Upload panoramic and/or cephalogram]
+    Upload --> CheckPan{Panoramic provided?}
+    CheckPan -->|Yes| PanAPI[Call AnalyzePanoramicAsync]
+    CheckPan -->|No| CheckCeph
+    PanAPI --> CheckCeph{Cephalogram provided?}
+    CheckCeph -->|No| SavePartial[Persist partial results]
+    CheckCeph -->|Yes| CephLM[Call AnalyzeCephLandmarksAsync]
+    CephLM --> CvmAPI[Call AnalyzeCvmAsync]
+    CvmAPI --> CephSum[Call AnalyzeCephAsync with landmarks]
+    CephSum --> CheckFull{Panoramic and ceph summary available?}
+    CheckFull -->|Yes| FullCase[Call AnalyzeFullCaseAsync]
+    CheckFull -->|No| CheckGemma
+    FullCase --> CheckGemma{DentalGemma enabled?}
+    CheckGemma -->|Yes| Gemma[Call AnalyzeDentalGemmaReportAsync]
+    CheckGemma -->|No| SaveCase
+    Gemma --> SaveCase[Save XRayAnalysisCase to database]
+    SavePartial --> Display[Display results with overlays]
+    SaveCase --> Display
+    Display --> End([Doctor reviews measurements and report])

@@ -1,0 +1,314 @@
+/* Gummy Smile clinical output panels — mirrors GS5 React UI */
+.gs-clinical-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.25rem;
+}
+
+.gs-clinical-card h2 {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.gs-clinical-subtitle {
+    color: #64748b;
+    font-size: 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.gs-stat-grid {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.gs-stat-grid-3 { grid-template-columns: repeat(3, 1fr); }
+.gs-stat-grid-6 { grid-template-columns: repeat(3, 1fr); }
+
+@media (max-width: 768px) {
+    .gs-stat-grid-3, .gs-stat-grid-6 { grid-template-columns: repeat(2, 1fr); }
+}
+
+.gs-stat-box {
+    background: #f8fafc;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+}
+
+.gs-stat-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #64748b;
+    margin-bottom: 0.25rem;
+}
+
+.gs-stat-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.gs-badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.gs-etiology-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #334155;
+}
+
+.gs-measure-table th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #64748b;
+    background: #f8fafc;
+}
+
+.gs-overlay-img {
+    width: 100%;
+    border-radius: 0.5rem;
+    border: 1px solid #e2e8f0;
+    background: #0f172a;
+}
+
+.gs-chart-wrap {
+    min-height: 280px;
+    position: relative;
+}
+
+.gs-treatment-item {
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.gs-treatment-item-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.gs-suitability-I { background: #dcfce7; color: #166534; }
+.gs-suitability-P { background: #fef9c3; color: #854d0e; }
+.gs-suitability-X { background: #fee2e2; color: #991b1b; }
+
+/* ── Wizard stepper ── */
+.gs-wizard {
+    background: #fff;
+    border: 1px solid var(--cc-slate-200, #e2e8f0);
+    border-radius: 1rem;
+    box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+}
+
+.gs-wizard-progress {
+    height: 4px;
+    background: #e2e8f0;
+}
+
+.gs-wizard-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #137fec 0%, #3b9eff 100%);
+    border-radius: 0 2px 2px 0;
+    transition: width 0.35s ease;
+}
+
+.gs-wizard-track {
+    display: flex;
+    align-items: flex-start;
+    padding: 1.25rem 1rem 1.1rem;
+    gap: 0;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.gs-wizard-track::-webkit-scrollbar {
+    display: none;
+}
+
+.gs-wizard-step {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 7.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.6rem;
+    padding: 0 0.35rem;
+    scroll-snap-align: center;
+    text-decoration: none;
+    color: inherit;
+    z-index: 1;
+}
+
+a.gs-wizard-step:hover .gs-wizard-node {
+    transform: scale(1.06);
+    box-shadow: 0 4px 14px rgba(19, 127, 236, 0.25);
+}
+
+a.gs-wizard-step.is-done:hover .gs-wizard-node {
+    box-shadow: 0 4px 14px rgba(22, 163, 74, 0.25);
+}
+
+.gs-wizard-connector {
+    flex: 1 1 0;
+    min-width: 1.5rem;
+    height: 3px;
+    background: #e2e8f0;
+    border-radius: 2px;
+    margin-top: 1.35rem;
+    align-self: flex-start;
+    z-index: 0;
+}
+
+.gs-wizard-connector.is-filled {
+    background: linear-gradient(90deg, #16a34a, #22c55e);
+}
+
+.gs-wizard-node {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    background: #f1f5f9;
+    color: #94a3b8;
+    border: 2px solid #e2e8f0;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.gs-wizard-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    max-width: 8.5rem;
+}
+
+.gs-wizard-index {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #94a3b8;
+}
+
+.gs-wizard-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1.25;
+    color: #64748b;
+}
+
+.gs-wizard-hint {
+    font-size: 0.68rem;
+    color: #94a3b8;
+    line-height: 1.2;
+}
+
+/* Active step */
+.gs-wizard-step.is-active .gs-wizard-node {
+    background: linear-gradient(135deg, #137fec 0%, #0b5ed7 100%);
+    color: #fff;
+    border-color: #137fec;
+    box-shadow: 0 0 0 4px rgba(19, 127, 236, 0.18), 0 6px 20px rgba(19, 127, 236, 0.35);
+}
+
+.gs-wizard-step.is-active .gs-wizard-index {
+    color: #137fec;
+}
+
+.gs-wizard-step.is-active .gs-wizard-label {
+    color: #0f172a;
+}
+
+.gs-wizard-step.is-active .gs-wizard-hint {
+    color: #64748b;
+}
+
+/* Completed step */
+.gs-wizard-step.is-done .gs-wizard-node {
+    background: #16a34a;
+    color: #fff;
+    border-color: #16a34a;
+}
+
+.gs-wizard-step.is-done .gs-wizard-index {
+    color: #16a34a;
+}
+
+.gs-wizard-step.is-done .gs-wizard-label {
+    color: #15803d;
+}
+
+.gs-wizard-step.is-done .gs-wizard-hint {
+    color: #4ade80;
+}
+
+/* Pending step */
+.gs-wizard-step.is-pending .gs-wizard-node {
+    background: #f8fafc;
+    color: #cbd5e1;
+    border-color: #e2e8f0;
+}
+
+.gs-wizard-step.is-pending .gs-wizard-label {
+    color: #94a3b8;
+}
+
+@media (max-width: 991px) {
+    .gs-wizard-track {
+        padding: 1rem 0.75rem;
+    }
+
+    .gs-wizard-step {
+        min-width: 6.5rem;
+    }
+
+    .gs-wizard-hint {
+        display: none;
+    }
+
+    .gs-wizard-connector {
+        min-width: 0.75rem;
+    }
+}
+
+@media (max-width: 575px) {
+    .gs-wizard-step {
+        min-width: 5.5rem;
+    }
+
+    .gs-wizard-node {
+        width: 2.35rem;
+        height: 2.35rem;
+        font-size: 0.95rem;
+    }
+
+    .gs-wizard-label {
+        font-size: 0.7rem;
+    }
+
+    .gs-wizard-index {
+        font-size: 0.6rem;
+    }
+}

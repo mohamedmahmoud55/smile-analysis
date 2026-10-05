@@ -1,0 +1,156 @@
+@model SmileAnalysisBl.ViewModels.AnalyticsViewModels.OrthoDashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    string StatusBadgeClass(string variant) => variant switch
+    {
+        "ortho-purple" => "badge-ortho-purple",
+        "primary" => "badge rounded-pill bg-primary bg-opacity-10 text-primary",
+        "warning" => "badge rounded-pill bg-warning bg-opacity-25 text-warning-emphasis",
+        "success" => "badge rounded-pill bg-success bg-opacity-10 text-success",
+        "info" => "badge rounded-pill bg-info bg-opacity-10 text-info-emphasis",
+        _ => "badge rounded-pill bg-secondary bg-opacity-10 text-secondary"
+    };
+}
+
+@if (TempData["ErrorMessage"] is string homeErr)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @homeErr
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<header class="ortho-sticky-header rounded-3 mb-4">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+            <h2 class="fw-bold fs-3 mb-1 text-dark">Welcome, @Model.WelcomeName</h2>
+            <p class="text-secondary small mb-0">Here is your daily clinical overview.</p>
+        </div>
+    </div>
+</header>
+
+<div class="pb-4 mx-auto" style="max-width: 90rem;">
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="ortho-stat-card h-100 d-flex flex-column gap-3">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="ortho-icon-box bg-primary bg-opacity-10 text-ortho-primary">
+                        <i class="bi bi-calendar-month"></i>
+                    </div>
+                    <span class="badge rounded-pill bg-light text-secondary fw-medium px-2 py-1" style="font-size: 0.65rem;">Today</span>
+                </div>
+                <div>
+                    <p class="text-secondary small fw-medium mb-1">Today's appointments</p>
+                    <h3 class="fw-bold display-6 mb-0 text-dark">@Model.TodayAppointments</h3>
+                </div>
+                <div class="d-flex align-items-center gap-1 small text-success fw-medium">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    <span>@Model.NewConsultationsToday new consultation@(Model.NewConsultationsToday == 1 ? "" : "s")</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="ortho-stat-card ortho-stat-card--pending h-100 d-flex flex-column gap-3">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="ortho-icon-box bg-warning bg-opacity-10 text-warning">
+                        <i class="bi bi-calendar-event"></i>
+                    </div>
+                    <span class="ortho-ping-dot d-inline-block"></span>
+                </div>
+                <div>
+                    <p class="text-secondary small fw-medium mb-1">Upcoming appointments</p>
+                    <h3 class="fw-bold display-6 mb-0 text-dark">@Model.UpcomingAppointments</h3>
+                </div>
+                <div class="small text-warning fw-medium">Scheduled ahead</div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="ortho-stat-card h-100 d-flex flex-column gap-3">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="ortho-icon-box bg-success bg-opacity-10 text-success">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+                    <span class="badge rounded-pill bg-light text-secondary fw-medium px-2 py-1" style="font-size: 0.65rem;">This week</span>
+                </div>
+                <div>
+                    <p class="text-secondary small fw-medium mb-1">Completed appointments</p>
+                    <h3 class="fw-bold display-6 mb-0 text-dark">@Model.CompletedThisWeek</h3>
+                </div>
+                <div class="small text-secondary fw-medium">
+                    @if (Model.CompletedDeltaVsLastWeek > 0)
+                    {
+                        <span>+@Model.CompletedDeltaVsLastWeek from last week</span>
+                    }
+                    else if (Model.CompletedDeltaVsLastWeek < 0)
+                    {
+                        <span>@Model.CompletedDeltaVsLastWeek from last week</span>
+                    }
+                    else
+                    {
+                        <span>On par with last week</span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section>
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+            <h3 class="fw-bold fs-5 mb-0 text-dark">Recent patients</h3>
+            <a class="text-decoration-none fw-medium small d-inline-flex align-items-center gap-1 text-ortho-primary" asp-controller="Patient" asp-action="Index">
+                View all
+                <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+        <div class="ortho-table-card">
+            <div class="table-responsive">
+                <table class="table table-borderless ortho-table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Patient ID</th>
+                            <th>Name</th>
+                            <th>Age</th>
+                            <th>Last visit</th>
+                            <th>Status</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="border-top border-light-subtle">
+                        @if (Model.RecentPatients.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center text-secondary py-5">No patients yet. Add a patient to see them here.</td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var row in Model.RecentPatients)
+                            {
+                                <tr>
+                                    <td class="text-secondary font-monospace small">@row.DisplayId</td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="rounded-circle bg-secondary bg-opacity-25 d-flex align-items-center justify-content-center text-secondary fw-semibold small"
+                                                 style="width: 2rem; height: 2rem; font-size: 0.65rem;">
+                                                @(row.FullName.Length >= 2 ? row.FullName[..2].ToUpperInvariant() : row.FullName.ToUpperInvariant())
+                                            </div>
+                                            <span class="fw-medium text-dark">@row.FullName</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-secondary">@row.Age</td>
+                                    <td class="text-secondary">@row.LastVisitDisplay</td>
+                                    <td>
+                                        <span class="@StatusBadgeClass(row.StatusBadgeVariant)">@row.StatusLabel</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <a class="btn btn-sm btn-link text-secondary text-decoration-none px-2" asp-controller="Patient" asp-action="Index">View</a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</div>

@@ -1,0 +1,107 @@
+@model SmileAnalysisBl.ViewModels.PrescriptionViewModels.PrescriptionDetailsViewModel
+@{
+    ViewData["Title"] = "Prescription";
+}
+
+<div class="cc-page">
+    <div class="mb-4 d-flex flex-wrap justify-content-between align-items-start gap-3">
+        <div>
+            <a asp-controller="Doctor" asp-action="MySchedule" class="text-decoration-none small text-secondary">
+                <i class="bi bi-arrow-left me-1"></i>Back to schedule
+            </a>
+            <h2 class="h4 fw-bold text-dark mt-2 mb-1">Prescription</h2>
+            <p class="text-secondary small mb-0">@Model.PatientName · @Model.AppointmentDate.ToString("MMMM dd, yyyy")</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a asp-action="DownloadPdf" asp-route-id="@Model.Id" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-file-earmark-pdf me-1"></i>Export PDF
+            </a>
+            @if (User.IsInRole("Doctor") || User.IsInRole("SuperAdmin"))
+            {
+                <a asp-action="Edit" asp-route-appointmentId="@Model.AppointmentId" class="btn cc-btn-primary btn-sm">
+                    <i class="bi bi-pencil me-1"></i>Edit
+                </a>
+            }
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] is string success)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @success
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-md-4">
+            <div class="cc-bento-card p-4">
+                <div class="small text-secondary mb-1">Patient</div>
+                <div class="fw-bold">@Model.PatientName</div>
+                <div class="small text-secondary">@Model.PatientDisplayId</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="cc-bento-card p-4">
+                <div class="small text-secondary mb-1">Doctor</div>
+                <div class="fw-bold">@Model.DoctorName</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="cc-bento-card p-4">
+                <div class="small text-secondary mb-1">Issued</div>
+                <div class="fw-bold">@Model.CreatedAt.ToString("MMMM dd, yyyy")</div>
+                <div class="small text-secondary">@Model.CreatedAt.ToString("h:mm tt")</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cc-data-card mb-4">
+        <div class="cc-card-head px-4 py-3">
+            <h3 class="h6 fw-bold mb-0">Medications (@Model.Items.Count)</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="table cc-table mb-0">
+                <thead>
+                <tr>
+                    <th class="ps-4">Medication</th>
+                    <th>Dosage</th>
+                    <th>Duration</th>
+                    <th class="pe-4">Instructions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr class="border-top border-light">
+                        <td class="ps-4 fw-semibold">@item.MedicationName</td>
+                        <td class="small">@item.Dosage</td>
+                        <td class="small">@item.Duration</td>
+                        <td class="pe-4 small text-secondary">@(item.Instructions ?? "—")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Notes))
+    {
+        <div class="cc-bento-card p-4 mb-4">
+            <h3 class="h6 fw-bold mb-2">Notes</h3>
+            <p class="mb-0 text-secondary">@Model.Notes</p>
+        </div>
+    }
+
+    @if (User.IsInRole("Doctor") || User.IsInRole("SuperAdmin"))
+    {
+    <form asp-action="Delete" method="post" onsubmit="return confirm('Delete this prescription permanently?');">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.Id" />
+        <input type="hidden" name="appointmentId" value="@Model.AppointmentId" />
+        <button type="submit" class="btn btn-outline-danger btn-sm">
+            <i class="bi bi-trash me-1"></i>Delete prescription
+        </button>
+    </form>
+    }
+</div>

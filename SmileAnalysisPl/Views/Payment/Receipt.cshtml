@@ -1,0 +1,84 @@
+@model SmileAnalysisBl.ViewModels.PaymentViewModels.PaymentReceiptViewModel
+@using System.Globalization
+@{
+    ViewData["Title"] = "Payment receipt";
+    string F(decimal n) => $"{n.ToString("N2", CultureInfo.InvariantCulture)} EGP";
+}
+
+<style>
+    @@media print {
+        .no-print { display: none !important; }
+        .receipt-sheet { box-shadow: none !important; border: 1px solid #ccc !important; }
+        body.ortho-body .ortho-sidebar-wrap,
+        body.ortho-body .ortho-mobile-bar { display: none !important; }
+        body.ortho-body .ortho-main-wrap { margin: 0 !important; }
+        body.ortho-body .container-fluid { padding: 0 !important; }
+    }
+    .receipt-sheet {
+        max-width: 28rem;
+        margin: 0 auto;
+    }
+</style>
+
+<div class="cc-page">
+    <div class="no-print d-flex flex-wrap gap-2 justify-content-between align-items-center mb-4">
+        <a class="btn btn-outline-secondary btn-sm" asp-action="Index" asp-route-patientId="@Model.PatientId">
+            <i class="bi bi-arrow-left me-1"></i>Back to billing
+        </a>
+        <button type="button" class="btn btn-primary btn-sm" onclick="window.print()">
+            <i class="bi bi-printer me-1"></i>Print receipt
+        </button>
+    </div>
+
+    <div class="receipt-sheet cc-bento-card p-4 p-md-5">
+        <div class="text-center border-bottom pb-4 mb-4">
+            <div class="d-inline-flex align-items-center justify-content-center rounded-3 bg-primary text-white fw-bold mb-2" style="width: 3rem; height: 3rem;">
+                <i class="bi bi-receipt"></i>
+            </div>
+            <h1 class="h4 fw-bold text-dark mb-0">@Model.ClinicName</h1>
+            <p class="small text-secondary text-uppercase letter-spacing-1 mb-0">@Model.ClinicTagline</p>
+            <p class="small text-secondary mb-0 mt-2">Payment receipt</p>
+        </div>
+
+        <dl class="row small mb-0">
+            <dt class="col-5 text-secondary">Transaction</dt>
+            <dd class="col-7 font-monospace fw-semibold text-end mb-2">@Model.TransactionDisplayId</dd>
+
+            <dt class="col-5 text-secondary">Patient</dt>
+            <dd class="col-7 fw-medium text-end mb-2">@Model.PatientName</dd>
+
+            <dt class="col-5 text-secondary">Date</dt>
+            <dd class="col-7 text-end mb-2">@Model.PaymentDate.ToLocalTime().ToString("MMM d, yyyy", CultureInfo.InvariantCulture)</dd>
+
+            <dt class="col-5 text-secondary">Method</dt>
+            <dd class="col-7 text-end mb-2">@Model.Method</dd>
+
+            <dt class="col-5 text-secondary">Status</dt>
+            <dd class="col-7 text-end mb-2">@Model.Status</dd>
+        </dl>
+
+        <div class="rounded-3 bg-primary-subtle p-4 my-4 text-center">
+            <p class="small text-primary text-uppercase fw-semibold mb-1">Amount received</p>
+            <p class="display-6 fw-bold text-dark mb-0">@F(Model.Amount)</p>
+        </div>
+
+        <div class="border-top pt-3 small text-secondary">
+            <div class="d-flex justify-content-between mb-1">
+                <span>Net amount due (account)</span>
+                <span class="fw-medium text-dark">@F(Model.NetAmountDue)</span>
+            </div>
+            <div class="d-flex justify-content-between mb-1">
+                <span>Total paid to date</span>
+                <span class="fw-medium text-dark">@F(Model.TotalPaid)</span>
+            </div>
+            <div class="d-flex justify-content-between fw-semibold text-dark">
+                <span>Remaining balance</span>
+                <span>@F(Model.RemainingBalance)</span>
+            </div>
+        </div>
+
+        <p class="small text-secondary text-center mt-4 mb-0">
+            Issued @Model.IssuedAtUtc.ToLocalTime().ToString("MMM d, yyyy 'at' h:mm tt", CultureInfo.InvariantCulture)
+        </p>
+    </div>
+</div>

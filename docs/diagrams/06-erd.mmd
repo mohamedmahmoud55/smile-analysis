@@ -1,0 +1,200 @@
+erDiagram
+    Patients {
+        int Id PK
+        string FirstName
+        string LastName
+        int Gender
+        datetime DateOfBirth
+        string Phone
+        string Email
+        datetime CreatedAt
+        datetime UpdatedAt
+    }
+
+    PatientClinicalHistories {
+        int Id PK
+        int PatientId FK
+        string ChronicDiseases
+        string CurrentMedications
+        string Allergies
+        string PreviousSurgeries
+        string HeartOrBleedingConditions
+        datetime LastDentalVisit
+        string CurrentPainDetails
+        string PreviousDentalTreatments
+        string GumProblems
+        string OralHabits
+        datetime CreatedAt
+        datetime UpdatedAt
+    }
+
+    PatientBillingAccounts {
+        int Id PK
+        int PatientId FK
+        decimal BaseTreatmentCost
+        decimal AdditionalCosts
+        int DiscountType
+        decimal DiscountPercent
+        decimal DiscountFixedAmount
+        datetime CreatedAt
+        datetime UpdatedAt
+    }
+
+    Doctors {
+        int Id PK
+        string FirstName
+        string LastName
+        string Specialty
+        string LicenseNumber
+        string Email
+        string Phone
+        date BirthDate
+        string ApplicationUserId FK
+        datetime CreatedAt
+        datetime UpdatedAt
+    }
+
+    DoctorAvailabilities {
+        int Id PK
+        int DoctorId FK
+        int DayOfWeek
+        time StartTime
+        time EndTime
+        datetime CreatedAt
+        datetime UpdatedAt
+    }
+
+    Staff {
+        int Id PK
+        string FirstName
+        string LastName
+        string Email
+        string Phone
+        date BirthDate
+        datetime CreatedAt
+        datetime UpdatedAt
+    }
+
+    Appointments {
+        int Id PK
+        int PatientId FK
+        int DoctorId FK
+        int StaffId FK
+        datetime AppointmentTime
+        int DurationMinutes
+        int Status
+        datetime CreatedAt
+        datetime UpdatedAt
+    }
+
+    Payments {
+        int Id PK
+        int PatientId FK
+        int AppointmentId FK
+        decimal Amount
+        datetime PaymentDate
+        int Method
+        int Status
+        datetime CreatedAt
+        datetime UpdatedAt
+    }
+
+    Prescriptions {
+        int Id PK
+        int AppointmentId FK
+        string Notes
+        datetime CreatedAt
+        datetime UpdatedAt
+    }
+
+    PrescriptionItems {
+        int Id PK
+        int PrescriptionId FK
+        string MedicationName
+        string Dosage
+        string Duration
+        string Instructions
+        datetime CreatedAt
+        datetime UpdatedAt
+    }
+
+    GummySmileCases {
+        int Id PK
+        int PatientId FK
+        string GsCaseId UK
+        string GsStatus
+        string DiagnosisSummary
+        string Severity
+        string ReportJson
+        bytes ReportPdf
+        string ClinicalDraftJson
+        string ClinicalRequestJson
+        string OverridesRequestJson
+        string CaseSnapshotJson
+        bytes RestImage
+        string RestImageContentType
+        bytes SmileImage
+        string SmileImageContentType
+        string CachedAssetsJson
+        datetime CompletedAt
+        datetime CreatedAt
+        datetime UpdatedAt
+    }
+
+    XRayAnalysisCases {
+        int Id PK
+        int PatientId FK
+        string Summary
+        string CvmStage
+        string SkeletalClass
+        int LandmarkCount
+        int ConfidencePercent
+        bytes PanoramicImage
+        string PanoramicImageContentType
+        bytes CephImage
+        string CephImageContentType
+        string ResultsJson
+        datetime CompletedAt
+        datetime CreatedAt
+        datetime UpdatedAt
+    }
+
+    AspNetUsers {
+        string Id PK
+        string FirstName
+        string LastName
+        string UserName
+        string Email UK
+        string PasswordHash
+        string PhoneNumber
+    }
+
+    AspNetRoles {
+        string Id PK
+        string Name
+        string NormalizedName
+    }
+
+    AspNetUserRoles {
+        string UserId PK
+        string RoleId PK
+    }
+
+    Patients ||--o| PatientClinicalHistories : has
+    Patients ||--o| PatientBillingAccounts : has
+    Patients ||--o{ Appointments : books
+    Patients ||--o{ Payments : makes
+    Patients ||--o{ GummySmileCases : has
+    Patients ||--o{ XRayAnalysisCases : has
+
+    Doctors ||--o{ DoctorAvailabilities : defines
+    Doctors ||--o{ Appointments : attends
+    Staff ||--o{ Appointments : assists
+
+    Appointments ||--o{ Payments : generates
+    Appointments ||--o| Prescriptions : has
+    Prescriptions ||--|{ PrescriptionItems : contains
+
+    AspNetUsers ||--o{ AspNetUserRoles : has
+    AspNetRoles ||--o{ AspNetUserRoles : assigned
+    AspNetUsers |o--o| Doctors : linked_to

@@ -1,0 +1,26 @@
+flowchart TD
+    Start([User visits application]) --> Page[Account Login page]
+    Page --> Submit[Enter username and password]
+    Submit --> Valid{Model valid?}
+    Valid -->|No| Error1[Show validation errors]
+    Error1 --> Page
+
+    Valid -->|Yes| CheckUser[Validate user in database]
+    CheckUser --> Found{User exists?}
+    Found -->|No| Error2[Invalid email or password]
+    Error2 --> Page
+
+    Found -->|Yes| SignIn[Password sign-in]
+    SignIn --> Success{Login succeeded?}
+    Success -->|No| Error3[Account locked or not allowed]
+    Error3 --> Page
+
+    Success -->|Yes| GetRole[Get user roles]
+    GetRole --> RoleCheck{Role?}
+
+    RoleCheck -->|Doctor only| PatientIndex[Redirect Patient Index]
+    RoleCheck -->|Staff only| PatientIndex
+    RoleCheck -->|SuperAdmin or Admin| HomeIndex[Redirect Dashboard]
+
+    PatientIndex --> End([Authenticated session started])
+    HomeIndex --> End

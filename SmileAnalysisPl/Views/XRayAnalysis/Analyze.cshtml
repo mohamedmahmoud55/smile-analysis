@@ -1,0 +1,505 @@
+@model SmileAnalysisBl.Services.Interfaces.XRayAnalysisPageViewModel
+@{
+    ViewData["Title"] = "X-Ray & CDSS";
+    var results = Model.Results;
+    var showUploadForms = results is null || !Model.HasPanoramicResults || !Model.HasCephalogramResults;
+    var panoDone = Model.HasPanoramicResults;
+    var cephDone = Model.HasCephalogramResults;
+    var cdssDone = results?.FullCase is not null;
+    var cdssAvailable = Model.CanSynthesizeFullCase;
+    var completedSteps = (panoDone ? 1 : 0) + (cephDone ? 1 : 0) + (cdssDone ? 1 : 0);
+}
+
+<div class="cc-page">
+    <div class="pa-analysis-header">
+        <a asp-controller="Patient" asp-action="Details" asp-route-id="@Model.PatientId" class="pa-back-btn" title="Back to patient">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div class="flex-grow-1">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                <h1 class="h4 fw-bold text-dark mb-0">X-Ray &amp; CDSS</h1>
+                <span class="pa-ai-badge"><i class="bi bi-radioactive"></i> Radiographic AI</span>
+            </div>
+            <p class="text-secondary small mb-0">@Model.PatientName · @Model.DisplayId · @Model.PatientAge yrs · @Model.PatientSex</p>
+        </div>
+    </div>
+
+    <div class="pa-xr-progress mb-4" aria-label="Analysis workflow progress">
+        <div class="pa-xr-progress-track">
+            <div class="pa-xr-progress-fill" style="width: @(completedSteps * 100 / 3)%"></div>
+        </div>
+        <div class="pa-xr-progress-steps">
+            <div class="pa-xr-progress-step @(panoDone ? "is-complete" : "is-active")">
+                <span class="pa-xr-progress-dot"><i class="bi @(panoDone ? "bi-check-lg" : "bi-1-circle")"></i></span>
+                <span class="pa-xr-progress-label">Panoramic</span>
+            </div>
+            <div class="pa-xr-progress-step @(cephDone ? "is-complete" : panoDone ? "is-active" : "")">
+                <span class="pa-xr-progress-dot"><i class="bi @(cephDone ? "bi-check-lg" : "bi-2-circle")"></i></span>
+                <span class="pa-xr-progress-label">Cephalogram</span>
+            </div>
+            <div class="pa-xr-progress-step @(cdssDone ? "is-complete" : cdssAvailable ? "is-active" : "")">
+                <span class="pa-xr-progress-dot"><i class="bi @(cdssDone ? "bi-check-lg" : "bi-3-circle")"></i></span>
+                <span class="pa-xr-progress-label">Integrated CDSS</span>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger d-flex align-items-start gap-2">
+            <i class="bi bi-exclamation-triangle-fill mt-1"></i>
+            <div>@Model.ErrorMessage</div>
+        </div>
+    }
+
+    <div class="row g-4">
+        <div class="col-12 col-lg-8">
+            @if (showUploadForms)
+            {
+                <div class="pa-form-card mb-4">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="pa-xr-info-icon"><i class="bi bi-info-circle"></i></div>
+                        <div>
+                            <h2 class="h6 fw-bold mb-1">Upload radiographs separately</h2>
+                            <p class="text-secondary small mb-0">
+                                Run panoramic and cephalogram analyses as separate requests. Each submits only its own image to the AI service.
+                                @if (Model.CaseId is not null)
+                                {
+                                    <span>Adding the missing image will update this case. Run integrated CDSS once both are complete.</span>
+                                }
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    @if (results is null || !Model.HasPanoramicResults)
+                    {
+                        <div class="col-12 @(Model.HasCephalogramResults || results is null ? "col-xl-6" : "")">
+                            <div class="pa-xr-upload-card pa-xr-upload-card--pano h-100">
+                                <div class="pa-xr-upload-card-head">
+                                    <div class="pa-xr-upload-icon pa-xr-upload-icon--pano"><i class="bi bi-image"></i></div>
+                                    <div>
+                                        <h2 class="h6 fw-bold mb-1">Panoramic (OPG)</h2>
+                                        <p class="text-secondary small mb-0">Caries, impactions, restorations, and clearance blockers.</p>
+                                    </div>
+                                </div>
+
+                                <form id="panoramicAnalysisForm" asp-action="AnalyzePanoramic" method="post" enctype="multipart/form-data">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" asp-for="PatientId" />
+                                    @if (Model.CaseId is not null)
+                                    {
+                                        <input type="hidden" name="caseId" value="@Model.CaseId" />
+                                    }
+
+                                    <div class="pa-upload-zone" id="panoramicUploadZone">
+                                        <input type="file" name="panoramicImage" accept="image/*,.tif,.tiff" required aria-label="Upload panoramic image" />
+                                        <div class="pa-upload-placeholder text-center">
+                                            <div class="pa-upload-icon mx-auto"><i class="bi bi-cloud-arrow-up"></i></div>
+                                            <div class="pa-upload-label">Drop panoramic image here</div>
+                                            <div class="pa-upload-hint">JPG, PNG, TIFF · OPG recommended</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex flex-wrap gap-2 mt-4">
+                                        <button type="submit" class="btn cc-btn-primary px-4" id="panoramicSubmitBtn">
+                                            <i class="bi bi-stars me-2"></i>Analyze Panoramic
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    }
+
+                    @if (results is null || !Model.HasCephalogramResults)
+                    {
+                        <div class="col-12 @(Model.HasPanoramicResults || results is null ? "col-xl-6" : "")">
+                            <div class="pa-xr-upload-card pa-xr-upload-card--ceph h-100">
+                                <div class="pa-xr-upload-card-head">
+                                    <div class="pa-xr-upload-icon pa-xr-upload-icon--ceph"><i class="bi bi-crosshair"></i></div>
+                                    <div>
+                                        <h2 class="h6 fw-bold mb-1">Lateral Cephalogram</h2>
+                                        <p class="text-secondary small mb-0">Landmark detection, CVM staging, and ceph measurements. May take several minutes.</p>
+                                    </div>
+                                </div>
+
+                                <form id="cephAnalysisForm" asp-action="AnalyzeCephalogram" method="post" enctype="multipart/form-data">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" asp-for="PatientId" />
+                                    @if (Model.CaseId is not null)
+                                    {
+                                        <input type="hidden" name="caseId" value="@Model.CaseId" />
+                                    }
+
+                                    <div class="pa-upload-zone" id="cephUploadZone">
+                                        <input type="file" name="cephImage" accept="image/*,.tif,.tiff" required aria-label="Upload cephalogram image" />
+                                        <div class="pa-upload-placeholder text-center">
+                                            <div class="pa-upload-icon mx-auto"><i class="bi bi-cloud-arrow-up"></i></div>
+                                            <div class="pa-upload-label">Drop cephalogram here</div>
+                                            <div class="pa-upload-hint">JPG, PNG, TIFF · Lateral ceph recommended</div>
+                                        </div>
+                                    </div>
+
+                                    <div class="pa-xr-option mt-3">
+                                        <div class="form-check">
+                                            <input asp-for="RunDentalGemma" class="form-check-input" id="runDentalGemma" />
+                                            <label asp-for="RunDentalGemma" class="form-check-label small" for="runDentalGemma">
+                                                Generate DentalGemma narrative <span class="text-secondary">(optional)</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex flex-wrap gap-2 mt-4">
+                                        <button type="submit" class="btn cc-btn-primary px-4" id="cephSubmitBtn">
+                                            <i class="bi bi-stars me-2"></i>Analyze Cephalogram
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                @if (results is null)
+                {
+                    <div class="mt-4">
+                        <a asp-controller="Patient" asp-action="Details" asp-route-id="@Model.PatientId" class="btn btn-outline-secondary px-4">
+                            <i class="bi bi-x-lg me-1"></i>Cancel
+                        </a>
+                    </div>
+                }
+            }
+
+            @if (results is not null)
+            {
+                @if (!string.IsNullOrEmpty(Model.PanoramicOverlayDataUrl) || !string.IsNullOrEmpty(Model.CephOverlayDataUrl))
+                {
+                    <div class="row g-4 @(showUploadForms ? "mt-2" : "")">
+                        @if (!string.IsNullOrEmpty(Model.PanoramicOverlayDataUrl))
+                        {
+                            <div class="col-12 col-xl-6">
+                                <div class="pa-form-card h-100">
+                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                        <h2 class="h6 fw-bold mb-0"><i class="bi bi-image me-2 text-primary"></i>Panoramic findings</h2>
+                                        <span class="pa-badge-success"><i class="bi bi-check-circle me-1"></i>Analyzed</span>
+                                    </div>
+                                    <div class="pa-xray-viewer">
+                                        <img src="@Model.PanoramicOverlayDataUrl" alt="Panoramic overlay with AI findings" />
+                                    </div>
+                                    @if (results.Panoramic?.BlockedUntilDentalClearance == true)
+                                    {
+                                        <div class="alert alert-warning small mt-3 mb-0 d-flex align-items-start gap-2">
+                                            <i class="bi bi-shield-exclamation mt-1"></i>
+                                            <span>Dental clearance required before orthodontic treatment.</span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrEmpty(Model.CephOverlayDataUrl))
+                        {
+                            <div class="col-12 col-xl-6">
+                                <div class="pa-form-card h-100">
+                                    <div class="d-flex align-items-center justify-content-between mb-3">
+                                        <h2 class="h6 fw-bold mb-0"><i class="bi bi-crosshair me-2 text-info"></i>Cephalometric overlay</h2>
+                                        <span class="pa-badge-success"><i class="bi bi-check-circle me-1"></i>Analyzed</span>
+                                    </div>
+                                    <div class="pa-xray-viewer">
+                                        <img src="@Model.CephOverlayDataUrl" alt="Cephalometric overlay with landmarks" />
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+
+                <div class="pa-form-card mt-4">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <div class="pa-xr-info-icon pa-xr-info-icon--violet"><i class="bi bi-cpu"></i></div>
+                        <h2 class="h6 fw-bold mb-0">CDSS summary</h2>
+                    </div>
+
+                    <div class="row g-3">
+                        @if (results.CephLandmarks?.Landmarks.Count > 0)
+                        {
+                            <div class="col-6 col-md-4 col-xl-3">
+                                <div class="pa-xr-metric-card">
+                                    <div class="pa-xr-metric-label">Landmarks</div>
+                                    <div class="pa-xr-metric-value">@results.CephLandmarks.Landmarks.Count</div>
+                                    <div class="pa-xr-metric-hint">detected</div>
+                                </div>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(results.Cvm?.Stage))
+                        {
+                            <div class="col-6 col-md-4 col-xl-3">
+                                <div class="pa-xr-metric-card">
+                                    <div class="pa-xr-metric-label">CVM stage</div>
+                                    <div class="pa-xr-metric-value">@results.Cvm.Stage</div>
+                                </div>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.CephSummary?.SkeletalClass) && Model.CephSummary.SkeletalClass != "undetermined")
+                        {
+                            <div class="col-6 col-md-4 col-xl-3">
+                                <div class="pa-xr-metric-card">
+                                    <div class="pa-xr-metric-label">Skeletal class</div>
+                                    <div class="pa-xr-metric-value pa-xr-metric-value--sm">@Model.CephSummary.SkeletalClass</div>
+                                </div>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.CephSummary?.VerticalPattern) && Model.CephSummary.VerticalPattern != "undetermined")
+                        {
+                            <div class="col-6 col-md-4 col-xl-3">
+                                <div class="pa-xr-metric-card">
+                                    <div class="pa-xr-metric-label">Vertical pattern</div>
+                                    <div class="pa-xr-metric-value pa-xr-metric-value--sm">@Model.CephSummary.VerticalPattern</div>
+                                </div>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.CephSummary?.SkeletalDiscrepancy) && Model.CephSummary.SkeletalDiscrepancy != "undetermined")
+                        {
+                            <div class="col-6 col-md-4 col-xl-3">
+                                <div class="pa-xr-metric-card">
+                                    <div class="pa-xr-metric-label">Skeletal discrepancy</div>
+                                    <div class="pa-xr-metric-value pa-xr-metric-value--sm">@Model.CephSummary.SkeletalDiscrepancy</div>
+                                </div>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.CephSummary?.IncisorCompensation) && Model.CephSummary.IncisorCompensation != "not assessed")
+                        {
+                            <div class="col-6 col-md-4 col-xl-3">
+                                <div class="pa-xr-metric-card">
+                                    <div class="pa-xr-metric-label">Incisor compensation</div>
+                                    <div class="pa-xr-metric-value pa-xr-metric-value--sm">@Model.CephSummary.IncisorCompensation</div>
+                                </div>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.CephSummary?.SoftTissueProfile) && Model.CephSummary.SoftTissueProfile != "not assessed")
+                        {
+                            <div class="col-6 col-md-4 col-xl-3">
+                                <div class="pa-xr-metric-card">
+                                    <div class="pa-xr-metric-label">Soft tissue profile</div>
+                                    <div class="pa-xr-metric-value pa-xr-metric-value--sm">@Model.CephSummary.SoftTissueProfile</div>
+                                </div>
+                            </div>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.CephSummary?.Etiology) && Model.CephSummary.Etiology != "undetermined")
+                        {
+                            <div class="col-6 col-md-4 col-xl-3">
+                                <div class="pa-xr-metric-card">
+                                    <div class="pa-xr-metric-label">Etiology</div>
+                                    <div class="pa-xr-metric-value pa-xr-metric-value--sm">@Model.CephSummary.Etiology</div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(results.FullCase?.TreatmentPlanLogic.MainRecommendation))
+                    {
+                        <div class="pa-recommendation mt-4">
+                            <div class="pa-recommendation-title"><i class="bi bi-clipboard2-pulse me-1"></i> Recommendation</div>
+                            <p class="small mb-0">@results.FullCase.TreatmentPlanLogic.MainRecommendation</p>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(results.DentalReport?.ReportJson.RadiographicSummary)
+                         || results.DentalReport?.OrthodonticExplanation is not null)
+                    {
+                        var ortho = results.DentalReport?.OrthodonticExplanation;
+                        var summary = ortho?.CaseSummary ?? results.DentalReport?.ReportJson.RadiographicSummary;
+                        <div class="pa-xr-narrative mt-3">
+                            <div class="alert alert-warning small py-2 mb-2">
+                                <i class="bi bi-shield-exclamation me-1"></i>
+                                AI draft — clinician review required.
+                            </div>
+                            <div class="pa-xr-narrative-title"><i class="bi bi-journal-text me-1"></i> DentalGemma narrative</div>
+                            <p class="small text-secondary mb-2">@summary</p>
+                            @if (!string.IsNullOrEmpty(ortho?.GrowthTimingComment))
+                            {
+                                <p class="small text-secondary mb-2"><span class="fw-semibold">Growth timing:</span> @ortho.GrowthTimingComment</p>
+                            }
+                            @if (ortho?.DentalBlockers.Any() == true)
+                            {
+                                <p class="small text-secondary mb-2"><span class="fw-semibold">Dental blockers:</span> @string.Join(", ", ortho.DentalBlockers)</p>
+                            }
+                            @if (ortho?.OrthodonticOptionsExplanation.Any() == true)
+                            {
+                                <ul class="small text-secondary mb-0 ps-3">
+                                    @foreach (var option in ortho.OrthodonticOptionsExplanation)
+                                    {
+                                        <li>@option</li>
+                                    }
+                                </ul>
+                            }
+                            @if (Model.CaseId is not null)
+                            {
+                                <div class="mt-3">
+                                    <a asp-controller="DentalGemma" asp-action="Index"
+                                       asp-route-patientId="@Model.PatientId"
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-chat-dots me-1"></i>Open Dental AI Chat
+                                    </a>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+
+                @if (Model.CephMeasurementRows.Any())
+                {
+                    <div class="pa-form-card mt-4">
+                        <h2 class="h6 fw-bold mb-3"><i class="bi bi-table me-2 text-secondary"></i>Cephalometric measurements</h2>
+                        <div class="table-responsive pa-xr-table-wrap">
+                            <table class="table table-sm gs-measure-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Assessment</th>
+                                        <th>Measured</th>
+                                        <th>Norm</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var row in Model.CephMeasurementRows)
+                                    {
+                                        <tr>
+                                            <td>@row.Assessment</td>
+                                            <td class="fw-semibold">@row.Measured</td>
+                                            <td class="text-secondary">@row.Norm</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        @if (Model.CephSummary?.Warnings.Any() == true)
+                        {
+                            <div class="alert alert-warning small mt-3 mb-0 d-flex align-items-start gap-2">
+                                <i class="bi bi-exclamation-triangle mt-1"></i>
+                                <span>@string.Join(" · ", Model.CephSummary.Warnings)</span>
+                            </div>
+                        }
+                    </div>
+                }
+
+                @if (Model.CanSynthesizeFullCase)
+                {
+                    <div class="pa-xr-cdss-card mt-4">
+                        <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+                            <div>
+                                <span class="pa-ai-badge mb-2"><i class="bi bi-diagram-3"></i> Step 3</span>
+                                <h2 class="h6 fw-bold mb-1">Integrated CDSS</h2>
+                                <p class="text-secondary small mb-0">Both images are available. Run integrated treatment logic as a separate step.</p>
+                            </div>
+                            <form asp-action="SynthesizeFullCase" method="post" class="flex-shrink-0">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="patientId" value="@Model.PatientId" />
+                                <input type="hidden" name="caseId" value="@Model.CaseId" />
+                                <button type="submit" class="btn btn-light px-4 fw-semibold">
+                                    <i class="bi bi-diagram-3 me-2"></i>Synthesize case
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
+
+                <div class="d-flex flex-wrap gap-2 mt-4">
+                    <a asp-action="Analyze" asp-route-patientId="@Model.PatientId" class="btn cc-btn-primary px-4">
+                        <i class="bi bi-plus-circle me-2"></i>New analysis
+                    </a>
+                    <a asp-controller="Patient" asp-action="Details" asp-route-id="@Model.PatientId" class="btn btn-outline-secondary px-4">
+                        <i class="bi bi-person me-2"></i>Back to patient
+                    </a>
+                </div>
+            }
+        </div>
+
+        <div class="col-12 col-lg-4">
+            <div class="pa-preview-card">
+                <div class="pa-preview-head">
+                    <h2 class="h6 fw-bold mb-0">Analysis workflow</h2>
+                </div>
+                <div class="pa-preview-body">
+                    <div class="pa-xr-workflow">
+                        <div class="pa-xr-workflow-step @(panoDone ? "is-complete" : "is-active")">
+                            <div class="pa-xr-workflow-icon"><i class="bi @(panoDone ? "bi-check-circle-fill" : "bi-image")"></i></div>
+                            <div>
+                                <div class="pa-xr-workflow-title">Panoramic (OPG)</div>
+                                <div class="pa-xr-workflow-desc">Dental pathology &amp; clearance screening</div>
+                                @if (panoDone)
+                                {
+                                    <span class="pa-badge-success mt-1">Complete</span>
+                                }
+                                else
+                                {
+                                    <span class="pa-badge-pending mt-1">Pending</span>
+                                }
+                            </div>
+                        </div>
+                        <div class="pa-xr-workflow-step @(cephDone ? "is-complete" : panoDone ? "is-active" : "")">
+                            <div class="pa-xr-workflow-icon"><i class="bi @(cephDone ? "bi-check-circle-fill" : "bi-crosshair")"></i></div>
+                            <div>
+                                <div class="pa-xr-workflow-title">Cephalogram</div>
+                                <div class="pa-xr-workflow-desc">Landmarks, CVM &amp; measurements</div>
+                                @if (cephDone)
+                                {
+                                    <span class="pa-badge-success mt-1">Complete</span>
+                                }
+                                else
+                                {
+                                    <span class="pa-badge-pending mt-1">Pending</span>
+                                }
+                            </div>
+                        </div>
+                        <div class="pa-xr-workflow-step @(cdssDone ? "is-complete" : cdssAvailable ? "is-active" : "")">
+                            <div class="pa-xr-workflow-icon"><i class="bi @(cdssDone ? "bi-check-circle-fill" : "bi-diagram-3")"></i></div>
+                            <div>
+                                <div class="pa-xr-workflow-title">Integrated CDSS</div>
+                                <div class="pa-xr-workflow-desc">Combined treatment logic</div>
+                                @if (cdssDone)
+                                {
+                                    <span class="pa-badge-success mt-1">Complete</span>
+                                }
+                                else if (cdssAvailable)
+                                {
+                                    <span class="pa-badge-pending mt-1">Ready</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-light text-secondary border fw-normal mt-1">Locked</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pa-xr-sidebar-tip mt-4">
+                        <div class="small fw-bold text-secondary mb-2">Tips</div>
+                        <ul class="small text-secondary mb-0 ps-3">
+                            <li class="mb-2">Use high-resolution lateral ceph images for best landmark accuracy.</li>
+                            <li class="mb-2">Panoramic analysis may flag dental clearance blockers.</li>
+                            <li>Cephalogram analysis can take several minutes — keep this tab open.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/patient-analysis.js" asp-append-version="true"></script>
+    <script>
+        function bindSubmitLoading(formId, btnId, loadingText) {
+            document.getElementById(formId)?.addEventListener('submit', function () {
+                const btn = document.getElementById(btnId);
+                if (!btn) return;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>' + loadingText;
+            });
+        }
+
+        bindSubmitLoading('panoramicAnalysisForm', 'panoramicSubmitBtn', 'Analyzing panoramic…');
+        bindSubmitLoading('cephAnalysisForm', 'cephSubmitBtn', 'Analyzing cephalogram…');
+    </script>
+}

@@ -1,0 +1,145 @@
+@using SmileAnalysisDal.Entities.Enums
+@model SmileAnalysisBl.ViewModels.DoctorViewModels.DoctorSchedulePageViewModel
+@{
+    ViewData["Title"] = "Doctor schedule";
+    var startStr = Model.RangeStart.ToString("yyyy-MM-dd");
+    var endStr = Model.RangeEnd.ToString("yyyy-MM-dd");
+}
+
+<div class="cc-page">
+    <div class="mb-4 d-flex flex-wrap justify-content-between align-items-start gap-3">
+        <div>
+            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin"))
+            {
+                <a asp-controller="Doctor" asp-action="Index" class="text-decoration-none small text-secondary"><i class="bi bi-arrow-left me-1"></i>Back to medical team</a>
+            }
+            else if (User.IsInRole("Staff"))
+            {
+                <a asp-controller="Doctor" asp-action="SchedulePicker" class="text-decoration-none small text-secondary"><i class="bi bi-arrow-left me-1"></i>Back to doctor list</a>
+            }
+            else
+            {
+                <a asp-controller="Patient" asp-action="Index" class="text-decoration-none small text-secondary"><i class="bi bi-arrow-left me-1"></i>Back to patients</a>
+            }
+            <h2 class="h4 fw-bold text-dark mt-2 mb-1">Doctor schedule</h2>
+            <p class="text-secondary small mb-0">@Model.DoctorDisplayName — appointments in the selected period.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Staff") || User.IsInRole("Admin"))
+            {
+                <a class="btn cc-btn-primary btn-sm d-inline-flex align-items-center gap-1" asp-controller="Appointment" asp-action="Create">
+                    <i class="bi bi-plus-lg"></i>
+                    Schedule
+                </a>
+                <a class="btn btn-outline-secondary btn-sm rounded-pill" asp-action="SchedulePicker">
+                    <i class="bi bi-person-lines-fill me-1"></i>Change doctor
+                </a>
+            }
+            <a class="btn btn-outline-primary btn-sm rounded-pill" asp-controller="Appointment" asp-action="Index">
+                <i class="bi bi-list-ul me-1"></i>All appointments
+            </a>
+        </div>
+    </div>
+
+    <div class="cc-bento-card p-4 mb-4">
+        <form method="get" asp-action="Schedule" asp-route-id="@Model.DoctorId" class="row g-3 align-items-end">
+            <div class="col-12 col-sm-auto">
+                <label class="form-label small fw-semibold text-secondary mb-1" for="range-start">From</label>
+                <input class="form-control" id="range-start" name="start" type="date" value="@startStr" />
+            </div>
+            <div class="col-12 col-sm-auto">
+                <label class="form-label small fw-semibold text-secondary mb-1" for="range-end">To</label>
+                <input class="form-control" id="range-end" name="end" type="date" value="@endStr" />
+            </div>
+            <div class="col-12 col-sm-auto d-flex gap-2">
+                <button type="submit" class="btn cc-btn-primary">Apply range</button>
+                <a class="btn btn-outline-secondary" asp-action="Schedule" asp-route-id="@Model.DoctorId">Reset default</a>
+            </div>
+        </form>
+        <p class="small text-muted mb-0 mt-2">Default range is today through the next six weeks when you open this page without dates.</p>
+    </div>
+
+    <div class="cc-data-card">
+        <div class="cc-card-head px-4 py-3">
+            <h3 class="h6 fw-bold mb-0 text-dark">Appointments (@Model.Appointments.Count)</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="table cc-table mb-0">
+                <thead>
+                <tr>
+                    <th class="ps-4">When</th>
+                    <th>Patient</th>
+                    <th>Duration</th>
+                    <th>Status</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var a in Model.Appointments)
+                {
+                    var isToday = a.AppointmentTime.Date == DateTime.Today;
+                    <tr class="cc-table-row border-top border-light">
+                        <td class="ps-4 text-nowrap">
+                            <div class="cc-appt-date">
+                                <span class="cc-appt-date-main">@a.AppointmentTime.ToString("MMM d, yyyy")</span>
+                                <span class="cc-appt-date-sub">
+                                    @a.AppointmentTime.ToString("h:mm tt")
+                                    @if (isToday) { <span class="text-primary fw-semibold">· Today</span> }
+                                </span>
+                            </div>
+                        </td>
+                        <td class="small fw-semibold text-dark">@a.PatientName</td>
+                        <td class="small text-secondary">@a.DurationMinutes min</td>
+                        <td class="text-nowrap">@await Html.PartialAsync("_AppointmentStatusBadge", a.Status)</td>
+                        <td class="text-end pe-4 text-nowrap">
+                            @if (User.IsInRole("Doctor") || User.IsInRole("SuperAdmin"))
+                            {
+                                @if (a.HasPrescription)
+                                {
+                                    <a class="btn btn-link btn-sm p-0 text-primary me-2" asp-controller="Prescription" asp-action="Details" asp-route-appointmentId="@a.Id" title="View prescription">
+                                        <i class="bi bi-capsule-pill"></i>
+                                    </a>
+                                    <a class="btn btn-link btn-sm p-0 text-secondary me-2" asp-controller="Prescription" asp-action="Edit" asp-route-appointmentId="@a.Id" title="Edit prescription">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+                                }
+                                else
+                                {
+                                    <a class="btn btn-link btn-sm p-0 text-primary me-2" asp-controller="Prescription" asp-action="Create" asp-route-appointmentId="@a.Id" title="Create prescription">
+                                        <i class="bi bi-capsule"></i>
+                                    </a>
+                                }
+                            }
+                            @if (User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Staff"))
+                            {
+                                @if (a.Status == AppointmentStatus.Scheduled)
+                                {
+                                    <a class="btn btn-link btn-sm p-0 text-primary" asp-controller="Appointment" asp-action="Edit" asp-route-id="@a.Id" title="Edit appointment"><i class="bi bi-pencil"></i></a>
+                                    <form asp-controller="Appointment" asp-action="Cancel" asp-route-id="@a.Id" method="post" class="d-inline" onsubmit="return confirm('Cancel this appointment?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-link btn-sm p-0 text-danger" title="Cancel appointment"><i class="bi bi-x-circle"></i></button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">—</span>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted small">—</span>
+                            }
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Appointments.Any())
+                {
+                    <tr>
+                        <td colspan="5" class="text-center text-secondary py-5">No appointments in this date range.</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

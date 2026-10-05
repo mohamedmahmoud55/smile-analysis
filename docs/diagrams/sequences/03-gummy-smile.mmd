@@ -1,0 +1,53 @@
+sequenceDiagram
+    actor Doctor
+    participant MVC as GummySmileController
+    participant Svc as GummySmileCaseService
+    participant API as GummySmileApiService
+    participant Cloud as Gummy Smile API
+    participant DB as SQL Server
+
+    Doctor->>MVC: Start(patientId)
+    MVC->>MVC: CanAccessPatientAsync
+    MVC->>Svc: StartCaseAsync(patientId)
+    Svc->>API: CreateCaseAsync()
+    API->>Cloud: POST api/cases
+    Cloud-->>API: GsCaseDto
+    Svc->>DB: INSERT GummySmileCase
+    MVC-->>Doctor: Redirect Upload
+
+    Doctor->>MVC: POST Upload rest + smile images
+    MVC->>Svc: UploadImagesAsync()
+    Svc->>API: UploadImageAsync(rest)
+    API->>Cloud: POST images role=rest
+    Svc->>API: UploadImageAsync(smile)
+    API->>Cloud: POST images role=smile
+    Svc->>DB: UPDATE image bytes
+    MVC-->>Doctor: Redirect Analyze
+
+    Doctor->>MVC: POST Analyze
+    MVC->>Svc: RunAnalysisAsync()
+    Svc->>API: AnalyzeAsync()
+    API->>Cloud: POST api/cases/id/analyze
+    Cloud-->>API: AI measurements and overlays
+    Svc->>DB: UPDATE CaseSnapshotJson
+    MVC-->>Doctor: Review page
+
+    Doctor->>MVC: POST Review overrides
+    MVC->>Svc: SaveOverridesAsync()
+    Svc->>API: UpdateOverridesAsync()
+    Svc->>DB: UPDATE OverridesRequestJson
+
+    Doctor->>MVC: POST Clinical data
+    MVC->>Svc: SubmitClinicalAsync()
+    Svc->>API: UpdateClinicalAsync()
+    Svc->>DB: UPDATE ClinicalRequestJson
+
+    Doctor->>MVC: Diagnosis then Treatment
+    MVC->>Svc: FinalizeCaseAsync()
+    Svc->>DB: UPDATE DiagnosisSummary Severity CompletedAt
+
+    Doctor->>MVC: DownloadPdf
+    MVC->>Svc: GetReportPdfAsync()
+    Svc->>API: GET api/cases/id/report.pdf
+    API->>Cloud: Fetch PDF
+    Cloud-->>Doctor: PDF download

@@ -1,0 +1,73 @@
+@model SmileAnalysisBl.ViewModels.DoctorViewModels.AddDoctorAvailabilityViewModel
+@using System.Globalization
+
+<form asp-controller="Doctor" asp-action="AddAvailability" method="post" class="row g-3" id="add-availability-form">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="DoctorId" />
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small" role="alert"></div>
+    <div class="col-12">
+        <label asp-for="DayOfWeek" class="form-label fw-semibold small"></label>
+        <select asp-for="DayOfWeek" class="form-select" asp-items="Html.GetEnumSelectList<DayOfWeek>()"></select>
+        <span asp-validation-for="DayOfWeek" class="text-danger small"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="StartTime" class="form-label fw-semibold small"></label>
+        <input type="hidden" asp-for="StartTime" value="@Model.StartTime.ToString("HH:mm:ss", CultureInfo.InvariantCulture)" />
+        <div class="cc-time-12 row g-2" data-time-input="@Html.IdFor(m => m.StartTime)">
+            <div class="col-4">
+                <select class="form-select cc-time-12-hour" aria-label="Start hour">
+                    @for (var h = 1; h <= 12; h++)
+                    {
+                        <option value="@h">@h</option>
+                    }
+                </select>
+            </div>
+            <div class="col-4">
+                <select class="form-select cc-time-12-minute" aria-label="Start minute">
+                    <option value="00">00</option>
+                    <option value="30">30</option>
+                </select>
+            </div>
+            <div class="col-4">
+                <select class="form-select cc-time-12-ampm" aria-label="Start AM or PM">
+                    <option value="AM">AM</option>
+                    <option value="PM">PM</option>
+                </select>
+            </div>
+        </div>
+        <span asp-validation-for="StartTime" class="text-danger small"></span>
+    </div>
+    <div class="col-md-6">
+        <label asp-for="EndTime" class="form-label fw-semibold small"></label>
+        <input type="hidden" asp-for="EndTime" value="@Model.EndTime.ToString("HH:mm:ss", CultureInfo.InvariantCulture)" />
+        <div class="cc-time-12 row g-2" data-time-input="@Html.IdFor(m => m.EndTime)">
+            <div class="col-4">
+                <select class="form-select cc-time-12-hour" aria-label="End hour">
+                    @for (var h = 1; h <= 12; h++)
+                    {
+                        <option value="@h">@h</option>
+                    }
+                </select>
+            </div>
+            <div class="col-4">
+                <select class="form-select cc-time-12-minute" aria-label="End minute">
+                    <option value="00">00</option>
+                    <option value="30">30</option>
+                </select>
+            </div>
+            <div class="col-4">
+                <select class="form-select cc-time-12-ampm" aria-label="End AM or PM">
+                    <option value="AM">AM</option>
+                    <option value="PM">PM</option>
+                </select>
+            </div>
+        </div>
+        <span asp-validation-for="EndTime" class="text-danger small"></span>
+    </div>
+    <div class="col-12 pt-1">
+        <button type="submit" class="btn cc-btn-primary w-100 d-inline-flex align-items-center justify-content-center gap-2">
+            <i class="bi bi-plus-lg"></i>
+            Add slot
+        </button>
+    </div>
+</form>

@@ -1,0 +1,37 @@
+sequenceDiagram
+    actor User
+    participant Browser
+    participant Account as AccountController
+    participant AcctSvc as AccountService
+    participant SignIn as SignInManager
+    participant Identity as UserManager
+
+    User->>Browser: Open /Account/Login
+    Browser->>Account: GET Login
+    Account-->>Browser: Login view
+
+    User->>Browser: Submit email and password
+    Browser->>Account: POST Login (anti-forgery token)
+    Account->>AcctSvc: ValidateUser(viewModel)
+    AcctSvc->>Identity: Find user by credentials
+  Identity-->>AcctSvc: ApplicationUser or null
+
+    alt Invalid credentials
+        AcctSvc-->>Account: null
+        Account-->>Browser: Login view with error
+    else Valid credentials
+        AcctSvc-->>Account: ApplicationUser
+        Account->>SignIn: PasswordSignInAsync(user, password)
+        SignIn-->>Account: Succeeded
+
+        Account->>Identity: GetRolesAsync(user)
+        Identity-->>Account: roles list
+
+        alt Doctor only
+            Account-->>Browser: Redirect to Patient/Index
+        else Staff only
+            Account-->>Browser: Redirect to Patient/Index
+        else SuperAdmin or Admin
+            Account-->>Browser: Redirect to Home/Index (Dashboard)
+        end
+    end

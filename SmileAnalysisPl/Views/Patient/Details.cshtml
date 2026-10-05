@@ -1,0 +1,459 @@
+@model SmileAnalysisBl.ViewModels.PatientViewModels.PatientDetailsPageViewModel
+@{
+    ViewData["Title"] = Model.FullName;
+}
+
+<div class="cc-page">
+    <div class="cc-topbar d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <form class="cc-search-wrap flex-grow-1" method="get" asp-action="Index" asp-controller="Patient">
+            <i class="bi bi-search"></i>
+            <input type="search" name="q" class="form-control form-control-sm" placeholder="Search patients..." autocomplete="off" />
+        </form>
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="cc-icon-btn position-relative" title="Notifications" aria-label="Notifications">
+                <i class="bi bi-bell"></i>
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size:0.5rem;padding:0.2em 0.4em;">2</span>
+            </button>
+            <button type="button" class="cc-icon-btn" title="Help" aria-label="Help"><i class="bi bi-question-circle"></i></button>
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <a asp-action="Index" class="text-decoration-none small text-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Back to patient records
+        </a>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <!-- Patient Profile -->
+        <div class="col-12 col-lg-5 col-xl-4">
+            <div class="pa-profile-card h-100">
+                <div class="pa-profile-header">
+                    <div class="d-flex align-items-start gap-3 position-relative" style="z-index:1;">
+                        <div class="pa-profile-avatar pa-profile-avatar-lg @Model.AvatarClass">@Model.Initials</div>
+                        <div class="flex-grow-1 min-w-0">
+                            <span class="badge bg-white bg-opacity-25 text-white mb-2" style="font-size:0.65rem;">@Model.DisplayId</span>
+                            <h1 class="h4 fw-bold text-white mb-1">@Model.FullName</h1>
+                            <p class="text-white-50 small mb-0">@Model.Age years old · @Model.GenderDisplay</p>
+                        </div>
+                    </div>
+                    <div class="row g-2 mt-3 position-relative" style="z-index:1;">
+                        <div class="col-4">
+                            <div class="pa-stat-mini text-center">
+                                <div class="pa-stat-mini-value">@Model.TotalAppointments</div>
+                                <div class="pa-stat-mini-label">Visits</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="pa-stat-mini text-center">
+                                <div class="pa-stat-mini-value">@Model.CompletedAnalyses</div>
+                                <div class="pa-stat-mini-label">Analyses</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="pa-stat-mini text-center">
+                                <div class="pa-stat-mini-value">@Model.GummySmileCount</div>
+                                <div class="pa-stat-mini-label">Smile</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <div class="pa-info-row">
+                        <div class="pa-info-icon"><i class="bi bi-telephone"></i></div>
+                        <div>
+                            <div class="small text-secondary">Phone</div>
+                            <div class="fw-semibold">@(Model.Phone ?? "—")</div>
+                        </div>
+                    </div>
+                    <div class="pa-info-row">
+                        <div class="pa-info-icon"><i class="bi bi-envelope"></i></div>
+                        <div>
+                            <div class="small text-secondary">Email</div>
+                            <div class="fw-semibold">@(Model.Email ?? "—")</div>
+                        </div>
+                    </div>
+                    <div class="pa-info-row">
+                        <div class="pa-info-icon"><i class="bi bi-calendar-check"></i></div>
+                        <div>
+                            <div class="small text-secondary">Last visit</div>
+                            <div class="fw-semibold">@Model.LastVisitDisplay</div>
+                        </div>
+                    </div>
+                    <div class="pa-info-row">
+                        <div class="pa-info-icon"><i class="bi bi-calendar-event"></i></div>
+                        <div>
+                            <div class="small text-secondary">Next appointment</div>
+                            <div class="fw-semibold">@Model.NextAppointmentDisplay</div>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 mt-3 pt-2">
+                        @if (User.IsInRole("SuperAdmin") || User.IsInRole("Staff") || User.IsInRole("Doctor"))
+                        {
+                            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-sm btn-outline-secondary flex-grow-1">
+                                <i class="bi bi-pencil me-1"></i>Edit
+                            </a>
+                        }
+                        <a asp-controller="Appointment" asp-action="Create" asp-route-patientId="@Model.Id" class="btn btn-sm cc-btn-primary flex-grow-1">
+                            <i class="bi bi-calendar-plus me-1"></i>Schedule
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Cards -->
+        <div class="col-12 col-lg-7 col-xl-8">
+            <div class="mb-3">
+                <h2 class="h5 fw-bold text-dark mb-1">AI Analysis</h2>
+                <p class="text-secondary small mb-0">Select an analysis type to begin AI-powered clinical assessment.</p>
+            </div>
+            <div class="row g-3">
+                <div class="col-12 col-md-6 col-xl-4">
+                    <a asp-controller="GummySmile" asp-action="Start" asp-route-patientId="@Model.Id" class="pa-action-card pa-action-card-gummy">
+                        <div class="pa-action-icon"><i class="bi bi-stars"></i></div>
+                        <div class="pa-action-title">Gummy Smile Analysis</div>
+                        <p class="pa-action-desc">AI-powered facial landmark detection and gingival display measurement for smile aesthetics evaluation.</p>
+                        <span class="pa-action-btn">Start Analysis <i class="bi bi-arrow-right"></i></span>
+                    </a>
+                </div>
+                <div class="col-12 col-md-6 col-xl-4">
+                    <a asp-controller="XRayAnalysis" asp-action="Analyze" asp-route-patientId="@Model.Id" class="pa-action-card pa-action-card-xray">
+                        <div class="pa-action-icon"><i class="bi bi-radioactive"></i></div>
+                        <div class="pa-action-title">X-Ray Analysis</div>
+                        <p class="pa-action-desc">Cephalometric landmark detection and skeletal analysis from lateral cephalogram radiographs.</p>
+                        <span class="pa-action-btn">Start Analysis <i class="bi bi-arrow-right"></i></span>
+                    </a>
+                </div>
+                <div class="col-12 col-md-6 col-xl-4">
+                    <a asp-controller="DentalGemma" asp-action="Index" asp-route-patientId="@Model.Id" class="pa-action-card pa-action-card-dental">
+                        <div class="pa-action-icon"><i class="bi bi-chat-dots"></i></div>
+                        <div class="pa-action-title">Dental AI Chat</div>
+                        <p class="pa-action-desc">DentalGemma chat for dental education, clinical reasoning, and simple explanations.</p>
+                        <span class="pa-action-btn">Open Dental AI <i class="bi bi-arrow-right"></i></span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clinical History & Appointments -->
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-lg-6">
+            <div class="pa-history-section cc-data-card overflow-hidden h-100">
+                <div class="cc-card-head px-4 py-3">
+                    <h2 class="h6 fw-bold text-dark mb-1">Appointment History</h2>
+                    <p class="text-secondary small mb-0">Past and upcoming visits for this patient.</p>
+                </div>
+                <div class="p-4">
+                    @if (Model.AppointmentHistory.Any())
+                    {
+                        @foreach (var appt in Model.AppointmentHistory)
+                        {
+                            <div class="pa-history-card mb-3">
+                                <div class="d-flex justify-content-between align-items-start gap-2">
+                                    <div>
+                                        <div class="fw-bold small">@appt.DateDisplay</div>
+                                        <div class="small text-secondary">@appt.DoctorName</div>
+                                    </div>
+                                    <span class="@appt.StatusBadgeClass">@appt.Status</span>
+                                </div>
+                                @if (appt.HasPrescription && (User.IsInRole("Doctor") || User.IsInRole("SuperAdmin") || User.IsInRole("Admin") || User.IsInRole("Staff")))
+                                {
+                                    <div class="mt-2">
+                                        <a asp-controller="Prescription" asp-action="Details" asp-route-appointmentId="@appt.Id" class="small text-primary text-decoration-none">
+                                            <i class="bi bi-capsule me-1"></i>View prescription
+                                        </a>
+                                        @if (appt.PrescriptionId.HasValue)
+                                        {
+                                            <a asp-controller="Prescription" asp-action="DownloadPdf" asp-route-id="@appt.PrescriptionId" class="small text-secondary text-decoration-none ms-2">
+                                                <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+                                            </a>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="pa-empty-state">
+                            <p class="fw-semibold mb-1">No appointments yet</p>
+                            <p class="small text-secondary mb-0">Schedule a visit to begin clinical care.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="pa-history-section cc-data-card overflow-hidden h-100">
+                <div class="cc-card-head px-4 py-3 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="h6 fw-bold text-dark mb-1">Prescription History</h2>
+                        <p class="text-secondary small mb-0">Medications prescribed during visits.</p>
+                    </div>
+                    <span class="cc-badge-muted">@Model.PrescriptionHistory.Count</span>
+                </div>
+                <div class="p-4">
+                    @if (Model.PrescriptionHistory.Any())
+                    {
+                        @foreach (var rx in Model.PrescriptionHistory)
+                        {
+                            <div class="pa-history-card mb-3">
+                                <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+                                    <div>
+                                        <div class="fw-bold small">@rx.DateDisplay</div>
+                                        <div class="small text-secondary">@rx.DoctorName</div>
+                                    </div>
+                                    <span class="cc-badge-blue">@rx.MedicationCount meds</span>
+                                </div>
+                                <p class="small text-secondary mb-2">@rx.MedicationSummary</p>
+                                @if (!string.IsNullOrWhiteSpace(rx.NotesPreview))
+                                {
+                                    <p class="small mb-2"><em>@rx.NotesPreview</em></p>
+                                }
+                                <div>
+                                    <a asp-controller="Prescription" asp-action="Details" asp-route-appointmentId="@rx.AppointmentId" class="small text-primary text-decoration-none me-2">
+                                        <i class="bi bi-eye me-1"></i>View
+                                    </a>
+                                    <a asp-controller="Prescription" asp-action="DownloadPdf" asp-route-id="@rx.Id" class="small text-secondary text-decoration-none">
+                                        <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+                                    </a>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="pa-empty-state">
+                            <p class="fw-semibold mb-1">No prescriptions yet</p>
+                            <p class="small text-secondary mb-0">Prescriptions appear here after a doctor issues them.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.ClinicalNotes.HasNotes)
+    {
+        <div class="cc-data-card mb-4 overflow-hidden">
+            <div class="cc-card-head px-4 py-3">
+                <h2 class="h6 fw-bold text-dark mb-1">Clinical Notes</h2>
+                <p class="text-secondary small mb-0">Medical history and clinical background on file.</p>
+            </div>
+            <div class="p-4">
+                <div class="row g-3">
+                    @if (!string.IsNullOrWhiteSpace(Model.ClinicalNotes.Allergies))
+                    {
+                        <div class="col-12 col-md-6">
+                            <div class="small text-secondary">Allergies</div>
+                            <div class="fw-semibold">@Model.ClinicalNotes.Allergies</div>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.ClinicalNotes.CurrentMedications))
+                    {
+                        <div class="col-12 col-md-6">
+                            <div class="small text-secondary">Current medications</div>
+                            <div class="fw-semibold">@Model.ClinicalNotes.CurrentMedications</div>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.ClinicalNotes.ChronicDiseases))
+                    {
+                        <div class="col-12 col-md-6">
+                            <div class="small text-secondary">Chronic diseases</div>
+                            <div class="fw-semibold">@Model.ClinicalNotes.ChronicDiseases</div>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.ClinicalNotes.HeartOrBleedingConditions))
+                    {
+                        <div class="col-12 col-md-6">
+                            <div class="small text-secondary">Heart / bleeding conditions</div>
+                            <div class="fw-semibold">@Model.ClinicalNotes.HeartOrBleedingConditions</div>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.ClinicalNotes.PreviousSurgeries))
+                    {
+                        <div class="col-12 col-md-6">
+                            <div class="small text-secondary">Previous surgeries</div>
+                            <div class="fw-semibold">@Model.ClinicalNotes.PreviousSurgeries</div>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.ClinicalNotes.PreviousDentalTreatments))
+                    {
+                        <div class="col-12 col-md-6">
+                            <div class="small text-secondary">Previous dental treatments</div>
+                            <div class="fw-semibold">@Model.ClinicalNotes.PreviousDentalTreatments</div>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.ClinicalNotes.GumProblems))
+                    {
+                        <div class="col-12 col-md-6">
+                            <div class="small text-secondary">Gum problems</div>
+                            <div class="fw-semibold">@Model.ClinicalNotes.GumProblems</div>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.ClinicalNotes.OralHabits))
+                    {
+                        <div class="col-12 col-md-6">
+                            <div class="small text-secondary">Oral habits</div>
+                            <div class="fw-semibold">@Model.ClinicalNotes.OralHabits</div>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.ClinicalNotes.CurrentPainDetails))
+                    {
+                        <div class="col-12">
+                            <div class="small text-secondary">Current pain</div>
+                            <div class="fw-semibold">@Model.ClinicalNotes.CurrentPainDetails</div>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.ClinicalNotes.LastDentalVisitDisplay))
+                    {
+                        <div class="col-12 col-md-6">
+                            <div class="small text-secondary">Last dental visit</div>
+                            <div class="fw-semibold">@Model.ClinicalNotes.LastDentalVisitDisplay</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Previous Analyses -->
+    <div class="pa-history-section cc-data-card overflow-hidden">
+        <div class="cc-card-head px-4 py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div>
+                <h2 class="h6 fw-bold text-dark mb-1">Previous Analyses</h2>
+                <p class="text-secondary small mb-0">Complete history of AI-powered assessments for this patient.</p>
+            </div>
+            <span class="cc-badge-muted">@Model.CompletedAnalyses total</span>
+        </div>
+
+        <div class="p-4">
+            <div class="row g-4">
+                <div class="col-12 col-lg-6">
+                    <div class="pa-history-panel pa-history-panel-gummy h-100">
+                        <div class="pa-history-panel-head">
+                            <div class="pa-history-panel-icon pa-history-panel-icon-gummy">
+                                <i class="bi bi-stars"></i>
+                            </div>
+                            <div class="flex-grow-1 min-w-0">
+                                <h3 class="pa-history-panel-title mb-0">Gummy Smile</h3>
+                                <p class="small text-secondary mb-0">Facial landmark & smile assessments</p>
+                            </div>
+                            <span class="cc-badge-blue">@Model.GummySmileCount</span>
+                        </div>
+
+                        <div class="pa-history-panel-body">
+                            @if (Model.GummySmileAnalyses.Any())
+                            {
+                                @foreach (var item in Model.GummySmileAnalyses)
+                                {
+                                    <a asp-controller="GummySmile" asp-action="Diagnosis" asp-route-id="@item.Id" class="pa-history-card pa-history-card-link">
+                                        <div class="pa-history-card-top">
+                                            <div class="pa-thumb @item.ThumbnailClass">@item.ThumbnailPlaceholder</div>
+                                            <div class="flex-grow-1 min-w-0">
+                                                <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+                                                    <span class="fw-bold small text-dark">@item.AnalysisType</span>
+                                                    <span class="@item.StatusBadgeClass">@item.Status</span>
+                                                </div>
+                                                <p class="pa-history-result mb-0">@item.Result</p>
+                                            </div>
+                                        </div>
+                                        <div class="pa-history-card-foot">
+                                            <span class="small text-secondary">
+                                                <i class="bi bi-clock me-1"></i>@item.DateDisplay
+                                                @if (item.ConfidencePercent.HasValue)
+                                                {
+                                                    <span class="ms-2"><i class="bi bi-cpu me-1"></i>@item.ConfidencePercent% confidence</span>
+                                                }
+                                            </span>
+                                            <span class="pa-history-card-action">
+                                                View details <i class="bi bi-arrow-right"></i>
+                                            </span>
+                                        </div>
+                                    </a>
+                                }
+                            }
+                            else
+                            {
+                                <div class="pa-empty-state">
+                                    <div class="pa-empty-icon pa-empty-icon-gummy"><i class="bi bi-stars"></i></div>
+                                    <p class="fw-semibold mb-1">No gummy smile analyses yet</p>
+                                    <p class="small text-secondary mb-3">Run your first AI smile assessment to see results here.</p>
+                                    <a asp-controller="GummySmile" asp-action="Start" asp-route-patientId="@Model.Id" class="btn btn-sm cc-btn-primary">
+                                        <i class="bi bi-plus-lg me-1"></i>Start Analysis
+                                    </a>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-6">
+                    <div class="pa-history-panel pa-history-panel-xray h-100">
+                        <div class="pa-history-panel-head">
+                            <div class="pa-history-panel-icon pa-history-panel-icon-xray">
+                                <i class="bi bi-radioactive"></i>
+                            </div>
+                            <div class="flex-grow-1 min-w-0">
+                                <h3 class="pa-history-panel-title mb-0">X-Ray</h3>
+                                <p class="small text-secondary mb-0">Cephalometric landmark detection</p>
+                            </div>
+                            <span class="cc-badge-blue">@Model.XRayCount</span>
+                        </div>
+
+                        <div class="pa-history-panel-body">
+                            @if (Model.XRayAnalyses.Any())
+                            {
+                                @foreach (var item in Model.XRayAnalyses)
+                                {
+                                    <a asp-controller="XRayAnalysis" asp-action="Analyze" asp-route-patientId="@Model.Id" asp-route-caseId="@item.Id" class="pa-history-card pa-history-card-link">
+                                        <div class="pa-history-card-top">
+                                            <div class="pa-thumb @item.ThumbnailClass">@item.ThumbnailPlaceholder</div>
+                                            <div class="flex-grow-1 min-w-0">
+                                                <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+                                                    <span class="fw-bold small text-dark">@item.AnalysisType</span>
+                                                    <span class="@item.StatusBadgeClass">@item.Status</span>
+                                                </div>
+                                                <p class="pa-history-result mb-0">@item.Result</p>
+                                            </div>
+                                        </div>
+                                        <div class="pa-history-card-foot">
+                                            <span class="small text-secondary">
+                                                <i class="bi bi-clock me-1"></i>@item.DateDisplay
+                                                @if (item.ConfidencePercent.HasValue)
+                                                {
+                                                    <span class="ms-2"><i class="bi bi-cpu me-1"></i>@item.ConfidencePercent% confidence</span>
+                                                }
+                                            </span>
+                                            <span class="pa-history-card-action">
+                                                View details <i class="bi bi-arrow-right"></i>
+                                            </span>
+                                        </div>
+                                    </a>
+                                }
+                            }
+                            else
+                            {
+                                <div class="pa-empty-state">
+                                    <div class="pa-empty-icon pa-empty-icon-xray"><i class="bi bi-radioactive"></i></div>
+                                    <p class="fw-semibold mb-1">No X-ray analyses yet</p>
+                                    <p class="small text-secondary mb-3">Upload a cephalogram to begin AI landmark detection.</p>
+                                    <a asp-controller="XRayAnalysis" asp-action="Analyze" asp-route-patientId="@Model.Id" class="btn btn-sm cc-btn-primary">
+                                        <i class="bi bi-plus-lg me-1"></i>Start Analysis
+                                    </a>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/patient-analysis.js" asp-append-version="true"></script>
+}

@@ -1,0 +1,91 @@
+﻿@model SmileAnalysisBl.ViewModels.AdminManamentViewModels.CreateAdminViewModel
+@{
+    ViewData["Title"] = "Add user";
+}
+
+<div class="cc-page">
+    <div class="mb-4">
+        <a asp-action="Index" class="text-decoration-none small text-secondary"><i class="bi bi-arrow-left me-1"></i>Back to users & roles</a>
+        <h2 class="h4 fw-bold text-dark mt-2 mb-1">Add user</h2>
+        <p class="text-secondary small mb-0">Create a new login account. Assign roles after saving from the user list.</p>
+    </div>
+
+    <form asp-action="Create" method="post">
+        <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small" role="alert"></div>
+
+        <div class="row g-4">
+            <div class="col-12 col-lg-5">
+                <div class="cc-bento-card p-4 h-100">
+                    <div class="d-flex align-items-center gap-2 mb-4">
+                        <div class="p-2 rounded-3 bg-primary-subtle text-primary">
+                            <i class="bi bi-person-vcard fs-5"></i>
+                        </div>
+                        <h3 class="cc-form-section-title mb-0">Profile</h3>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label asp-for="UserName" class="form-label fw-semibold small"></label>
+                            <input asp-for="UserName" class="form-control" placeholder="Username" />
+                            <span asp-validation-for="UserName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="FirstName" class="form-label fw-semibold small"></label>
+                            <input asp-for="FirstName" class="form-control" placeholder="First name" />
+                            <span asp-validation-for="FirstName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="LastName" class="form-label fw-semibold small"></label>
+                            <input asp-for="LastName" class="form-control" placeholder="Last name" />
+                            <span asp-validation-for="LastName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="PhoneNumber" class="form-label fw-semibold small"></label>
+                            <input asp-for="PhoneNumber" class="form-control" placeholder="+1 555 000 0000" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-7">
+                <div class="cc-bento-card p-4 h-100">
+                    <div class="d-flex align-items-center gap-2 mb-4">
+                        <div class="p-2 rounded-3 bg-warning-subtle text-warning-emphasis">
+                            <i class="bi bi-shield-lock fs-5"></i>
+                        </div>
+                        <h3 class="cc-form-section-title mb-0">Login credentials</h3>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label asp-for="Email" class="form-label fw-semibold small"></label>
+                            <input asp-for="Email" class="form-control" type="email" placeholder="user@clinic.com" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Password" class="form-label fw-semibold small"></label>
+                            <input asp-for="Password" type="password" class="form-control" autocomplete="new-password" />
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="ConfirmPassword" class="form-label fw-semibold small"></label>
+                            <input asp-for="ConfirmPassword" type="password" class="form-control" autocomplete="new-password" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 mt-4">
+            <button type="submit" class="btn cc-btn-primary d-inline-flex align-items-center gap-2">
+                <i class="bi bi-person-plus"></i>
+                Create user
+            </button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

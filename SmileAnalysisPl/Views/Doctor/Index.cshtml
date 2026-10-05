@@ -1,0 +1,280 @@
+@using System.Net
+@model SmileAnalysisBl.ViewModels.DoctorViewModels.DoctorRecordsPageViewModel
+@{
+    ViewData["Title"] = "Medical team";
+    var heightsLight = new[] { "60%", "80%", "70%", "95%", "85%", "40%", "30%" };
+    var heightsDark = new[] { "40%", "55%", "45%", "75%", "60%", "20%", "10%" };
+    var days = new[] { "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN" };
+}
+
+<div class="cc-page">
+    @if (TempData["SuccessMessage"] is string dMsg)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @dMsg
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] is string dErr)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @dErr
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    <div class="cc-topbar d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <form class="cc-search-wrap flex-grow-1" method="get" asp-action="Index" asp-controller="Doctor">
+            <i class="bi bi-search"></i>
+            <input type="search" name="q" value="@Model.SearchQuery" class="form-control form-control-sm" placeholder="Search medical team records..." autocomplete="off" />
+        </form>
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="cc-icon-btn" title="Notifications"><i class="bi bi-bell"></i></button>
+            <button type="button" class="cc-icon-btn" title="Help"><i class="bi bi-question-circle"></i></button>
+            <button type="button" class="cc-icon-btn" title="Settings"><i class="bi bi-gear"></i></button>
+        </div>
+    </div>
+
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+        <div>
+            <h2 class="h3 fw-bold text-dark mb-1">Medical team</h2>
+            <p class="text-secondary mb-0 small">Manage specialist rosters and clinical availability across departments.</p>
+        </div>
+        @if (User.IsInRole("SuperAdmin"))
+        {
+            <a class="btn cc-btn-primary d-inline-flex align-items-center gap-2" asp-action="Create">
+                <i class="bi bi-plus-lg"></i>
+                Add new doctor
+            </a>
+        }
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="cc-bento-card p-4 h-100">
+                <p class="cc-bento-label mb-2">Total staff</p>
+                <div class="d-flex align-items-end justify-content-between">
+                    <span class="cc-bento-value mb-0">@Model.TotalStaffCount</span>
+                    <span class="small text-success bg-success-subtle px-2 py-1 rounded-pill">Clinical team</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="cc-bento-card p-4 h-100">
+                <p class="cc-bento-label mb-2">On duty now</p>
+                <div class="d-flex align-items-end justify-content-between">
+                    <span class="cc-bento-value mb-0">@Model.OnDutyApprox</span>
+                    <div class="d-flex">
+                        <span class="rounded-circle border border-white bg-secondary-subtle" style="width:1.5rem;height:1.5rem;margin-left:-0.35rem;"></span>
+                        <span class="rounded-circle border border-white bg-secondary" style="width:1.5rem;height:1.5rem;margin-left:-0.35rem;"></span>
+                        <span class="rounded-circle border border-white bg-secondary-emphasis" style="width:1.5rem;height:1.5rem;margin-left:-0.35rem;"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="cc-bento-card p-4 h-100">
+                <p class="cc-bento-label mb-2">Patient ratio</p>
+                <div class="d-flex align-items-end justify-content-between">
+                    <span class="cc-bento-value mb-0">@Model.PatientRatioDisplay</span>
+                    <i class="bi bi-graph-up-arrow text-primary fs-5"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="cc-bento-card p-4 h-100">
+                <p class="cc-bento-label mb-2">Satisfaction</p>
+                <div class="d-flex align-items-end justify-content-between">
+                    <span class="cc-bento-value mb-0">@Model.SatisfactionPercent%</span>
+                    <div>
+                        <i class="bi bi-star-fill text-warning small"></i>
+                        <i class="bi bi-star-fill text-warning small"></i>
+                        <i class="bi bi-star-fill text-warning small"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cc-data-card mb-4">
+        <div class="cc-card-head px-4 py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <h3 class="h6 fw-bold mb-0 text-dark">Active rostered doctors</h3>
+            <div class="d-flex gap-1">
+                <button type="button" class="cc-icon-btn" disabled title="Filter"><i class="bi bi-filter"></i></button>
+                <button type="button" class="cc-icon-btn" disabled title="Download"><i class="bi bi-download"></i></button>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table cc-table mb-0">
+                <thead>
+                <tr>
+                    <th class="ps-4">Doctor ID</th>
+                    <th>Name</th>
+                    <th>Specialization</th>
+                    <th>Contact</th>
+                    <th>Birth date</th>
+                    <th>Age</th>
+                    <th>Availability</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var row in Model.Rows)
+                {
+                    <tr class="border-top border-light">
+                        <td class="ps-4 text-nowrap"><span class="cc-pill-id">@row.DisplayId</span></td>
+                        <td class="text-nowrap">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="cc-avatar @row.AvatarClass">@row.Initials</span>
+                                <span class="small fw-semibold text-dark">@row.FullName</span>
+                            </div>
+                        </td>
+                        <td class="text-nowrap small text-secondary">@row.Specialty</td>
+                        <td class="text-nowrap small">
+                            <div class="text-secondary">@row.EmailDisplay</div>
+                            <div class="text-muted" style="font-size:0.7rem;">@row.PhoneDisplay</div>
+                        </td>
+                        <td class="text-nowrap small text-secondary">@row.BirthDateDisplay</td>
+                        <td class="text-nowrap small text-secondary">@row.AgeDisplay</td>
+                        <td class="text-nowrap"><span class="badge rounded-pill @row.AvailabilityBadgeClass">@row.AvailabilityLabel</span></td>
+                        <td class="text-end pe-4 text-nowrap">
+                            <div class="d-flex justify-content-end gap-2 align-items-center">
+                                <a class="btn btn-link btn-sm p-0 text-dark" asp-action="Schedule" asp-route-id="@row.Id" title="Doctor schedule (appointments)"><i class="bi bi-calendar3"></i></a>
+                                @if (User.IsInRole("SuperAdmin"))
+                                {
+                                    <a class="btn btn-link btn-sm p-0 text-primary" asp-action="Availability" asp-route-id="@row.Id" title="Weekly availability"><i class="bi bi-calendar-check"></i></a>
+                                }
+                                else
+                                {
+                                    <span class="btn btn-link btn-sm p-0 text-primary disabled opacity-50"><i class="bi bi-calendar-check"></i></span>
+                                }
+                                @if (User.IsInRole("SuperAdmin"))
+                                {
+                                    <a class="btn btn-link btn-sm p-0 text-secondary" asp-action="Edit" asp-route-id="@row.Id" title="Edit"><i class="bi bi-pencil"></i></a>
+                                    <button type="button"
+                                            class="btn btn-link btn-sm p-0 text-danger"
+                                            title="Delete"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#deleteDoctorModal"
+                                            data-delete-url="@Url.Action("Delete", "Doctor", new { id = row.Id })"
+                                            data-item-name="@WebUtility.HtmlEncode(row.FullName)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                }
+                                else
+                                {
+                                    <span class="btn btn-link btn-sm p-0 text-secondary disabled opacity-50"><i class="bi bi-pencil"></i></span>
+                                    <span class="btn btn-link btn-sm p-0 text-danger disabled opacity-50"><i class="bi bi-trash"></i></span>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Rows.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center text-secondary py-5">No doctors match your search.</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <div class="px-4 py-3 border-top border-light bg-body-secondary bg-opacity-25 d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <span class="small text-secondary">Showing @(Model.Rows.Count == 0 ? 0 : 1) to @Model.Rows.Count of @Model.MatchingCount doctors</span>
+            <div class="d-flex align-items-center gap-1">
+                <button type="button" class="btn btn-sm btn-light border" disabled><i class="bi bi-chevron-left"></i></button>
+                <span class="btn btn-sm btn-primary px-2">1</span>
+                <button type="button" class="btn btn-sm btn-light border" disabled><i class="bi bi-chevron-right"></i></button>
+            </div>
+        </div>
+    </div>
+
+    @if (User.IsInRole("SuperAdmin"))
+    {
+        <div class="modal fade" id="deleteDoctorModal" tabindex="-1" aria-labelledby="deleteDoctorModalTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
+                    <div class="modal-header border-0 border-bottom bg-body-tertiary py-3">
+                        <div class="d-flex align-items-center gap-3 flex-grow-1">
+                            <div class="rounded-3 bg-danger bg-opacity-10 text-danger d-flex align-items-center justify-content-center flex-shrink-0" style="width: 3rem; height: 3rem;">
+                                <i class="bi bi-heart-pulse fs-4"></i>
+                            </div>
+                            <div>
+                                <h2 class="modal-title h5 fw-bold text-dark mb-0" id="deleteDoctorModalTitle">Remove doctor</h2>
+                                <p class="small text-secondary mb-0">This cannot be undone.</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body py-4">
+                        <p class="text-secondary mb-0" id="deleteDoctorModalMessage"></p>
+                    </div>
+                    <div class="modal-footer border-0 bg-light bg-opacity-50 gap-2">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                        <form method="post" id="deleteDoctorModalForm" class="d-inline m-0">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-danger rounded-pill px-4">Remove from roster</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="cc-bento-card p-4 h-100">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <h4 class="h6 fw-bold mb-0 text-dark">Weekly shift coverage</h4>
+                    <select class="form-select form-select-sm border-0 bg-light" style="max-width: 10rem;" disabled>
+                        <option>Next 7 days</option>
+                    </select>
+                </div>
+                <div class="d-flex align-items-end justify-content-between gap-2" style="min-height: 12rem;">
+                    @for (var i = 0; i < 7; i++)
+                    {
+                        var dim = i >= 5 ? "opacity-50" : "";
+                        <div class="flex-grow-1 @dim">
+                            <div class="cc-chart-bar">
+                                <div class="cc-bar-light" style="height: @heightsLight[i]"></div>
+                                <div class="cc-bar-dark" style="height: @heightsDark[i]"></div>
+                            </div>
+                            <p class="text-center small text-secondary mt-2 mb-0 fw-bold" style="font-size:0.65rem;">@days[i]</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="cc-insight-card p-4 h-100 d-flex flex-column">
+                <div class="rounded-3 bg-primary bg-opacity-25 d-inline-flex align-items-center justify-content-center mb-3" style="width:3rem;height:3rem;">
+                    <i class="bi bi-stars text-primary fs-4"></i>
+                </div>
+                <h4 class="h5 fw-bold mb-2">Smart rostering</h4>
+                <p class="text-secondary small mb-0 flex-grow-1" style="color: #cbd5e1 !important;">
+                    AI Ortho can surface optimal staffing levels from historical patient flow once analytics are connected.
+                </p>
+                <button type="button" class="btn btn-outline-light border-secondary mt-4 w-100" disabled>
+                    View recommendations <i class="bi bi-arrow-right ms-1"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @if (User.IsInRole("SuperAdmin"))
+    {
+        <script>
+            document.getElementById('deleteDoctorModal')?.addEventListener('show.bs.modal', function (event) {
+                const trigger = event.relatedTarget;
+                if (!trigger) return;
+                const url = trigger.getAttribute('data-delete-url');
+                const name = trigger.getAttribute('data-item-name') || 'this doctor';
+                const form = document.getElementById('deleteDoctorModalForm');
+                const msg = document.getElementById('deleteDoctorModalMessage');
+                if (form && url) form.setAttribute('action', url);
+                if (msg) msg.textContent = 'Remove "' + name + '" from the medical team roster? Availability and future scheduling for this doctor may be affected.';
+            });
+        </script>
+    }
+}

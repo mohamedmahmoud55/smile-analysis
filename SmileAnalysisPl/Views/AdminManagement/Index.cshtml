@@ -1,0 +1,195 @@
+@model IEnumerable<SmileAnalysisBl.ViewModels.AdminManamentViewModels.AdminListViewModel>
+@{
+    ViewData["Title"] = "User & role management";
+    var users = Model?.ToList() ?? new List<SmileAnalysisBl.ViewModels.AdminManamentViewModels.AdminListViewModel>();
+    var totalUsers = users.Count;
+    var withRoles = users.Count(u => !string.IsNullOrWhiteSpace(u.Roles));
+
+    string UserInitials(string? email, string? userName)
+    {
+        var source = !string.IsNullOrWhiteSpace(userName) ? userName : email ?? "?";
+        var parts = source.Split(new[] { '@', ' ', '.' }, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length >= 2) return $"{parts[0][0]}{parts[1][0]}".ToUpperInvariant();
+        return source.Length >= 2 ? source[..2].ToUpperInvariant() : source.ToUpperInvariant();
+    }
+
+    string AvatarClass(int index) => (index % 5) switch
+    {
+        0 => "cc-avatar-blue",
+        1 => "cc-avatar-emerald",
+        2 => "cc-avatar-purple",
+        3 => "cc-avatar-amber",
+        _ => "cc-avatar-slate"
+    };
+}
+
+<div class="cc-page">
+    @if (TempData["SuccessMessage"] is string msg)
+    {
+        <div id="admin-alert" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle me-2"></i>@msg
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] is string err)
+    {
+        <div id="admin-alert" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle me-2"></i>@err
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-between gap-3 mb-4">
+        <div>
+            <h2 class="h3 fw-bold text-dark mb-1">Users & roles</h2>
+            <p class="text-secondary mb-0 small">Manage login accounts and assign application roles.</p>
+        </div>
+        <a asp-action="Create" class="btn cc-btn-primary d-inline-flex align-items-center gap-2">
+            <i class="bi bi-person-plus"></i>
+            Add user
+        </a>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-md-6 col-xl-4">
+            <div class="cc-bento-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="p-2 rounded-3 bg-primary-subtle text-primary">
+                        <i class="bi bi-people fs-5"></i>
+                    </div>
+                </div>
+                <p class="cc-bento-label mb-1">Total users</p>
+                <p class="cc-bento-value mb-0">@totalUsers</p>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-4">
+            <div class="cc-bento-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="p-2 rounded-3 bg-success-subtle text-success-emphasis">
+                        <i class="bi bi-shield-check fs-5"></i>
+                    </div>
+                </div>
+                <p class="cc-bento-label mb-1">With roles assigned</p>
+                <p class="cc-bento-value mb-0">@withRoles</p>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-4">
+            <div class="cc-bento-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="p-2 rounded-3 bg-warning-subtle text-warning-emphasis">
+                        <i class="bi bi-key fs-5"></i>
+                    </div>
+                </div>
+                <p class="cc-bento-label mb-1">Role management</p>
+                <p class="small text-secondary mb-0 mt-2">Use the roles action on each row to add or remove SuperAdmin, Admin, Staff, or Doctor access.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="cc-bento-card p-4 mb-4 cc-filter-bar">
+        <div class="cc-search-wrap">
+            <i class="bi bi-search"></i>
+            <input type="search" id="user-search" class="form-control form-control-sm" placeholder="Search by email, username, or role…" autocomplete="off" />
+        </div>
+    </div>
+
+    <div class="cc-data-card">
+        <div class="cc-card-head px-4 py-3">
+            <h3 class="h6 fw-bold mb-0 text-dark">All accounts (<span id="user-visible-count">@totalUsers</span>)</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="table cc-table mb-0" id="users-table">
+                <thead>
+                <tr>
+                    <th class="ps-4">User</th>
+                    <th>Username</th>
+                    <th>Roles</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @for (var i = 0; i < users.Count; i++)
+                {
+                    var admin = users[i];
+                    var roleList = admin.Roles.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    var searchText = $"{admin.Email} {admin.UserName} {admin.Roles}".ToLowerInvariant();
+                    <tr class="cc-table-row border-top border-light user-row" data-search="@searchText">
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="cc-avatar @AvatarClass(i)">@UserInitials(admin.Email, admin.UserName)</span>
+                                <span class="small fw-semibold text-dark">@admin.Email</span>
+                            </div>
+                        </td>
+                        <td class="small text-secondary">@admin.UserName</td>
+                        <td>
+                            <div class="d-flex flex-wrap gap-1">
+                                @if (roleList.Length == 0)
+                                {
+                                    <span class="cc-badge-muted">No roles</span>
+                                }
+                                else
+                                {
+                                    @foreach (var role in roleList)
+                                    {
+                                        <span class="cc-badge-blue">@role</span>
+                                    }
+                                }
+                            </div>
+                        </td>
+                        <td class="text-end pe-4">
+                            <div class="cc-table-actions cc-table-actions-visible d-inline-flex justify-content-end gap-1 align-items-center">
+                                <a class="btn btn-link btn-sm p-1 text-primary" asp-action="ManageRoles" asp-route-id="@admin.Id" title="Manage roles"><i class="bi bi-shield-lock"></i></a>
+                                <a class="btn btn-link btn-sm p-1 text-secondary" asp-action="Edit" asp-route-id="@admin.Id" title="Edit user"><i class="bi bi-pencil"></i></a>
+                                <a class="btn btn-link btn-sm p-1 text-secondary" asp-action="ResetPassword" asp-route-id="@admin.Id" title="Reset password"><i class="bi bi-key"></i></a>
+                                <a class="btn btn-link btn-sm p-1 text-danger" asp-action="Delete" asp-route-id="@admin.Id" title="Delete user"><i class="bi bi-trash"></i></a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!users.Any())
+                {
+                    <tr>
+                        <td colspan="4" class="text-center text-secondary py-5">
+                            <i class="bi bi-person-workspace fs-2 d-block mb-2 opacity-50"></i>
+                            No users found.
+                            <a asp-action="Create" class="d-block mt-2 text-decoration-none">Add the first user</a>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            var searchEl = document.getElementById('user-search');
+            var rows = document.querySelectorAll('.user-row');
+            var countEl = document.getElementById('user-visible-count');
+
+            function applyFilter() {
+                var q = (searchEl?.value || '').trim().toLowerCase();
+                var visible = 0;
+                rows.forEach(function (row) {
+                    var show = !q || (row.dataset.search || '').indexOf(q) >= 0;
+                    row.classList.toggle('d-none', !show);
+                    if (show) visible++;
+                });
+                if (countEl) countEl.textContent = visible;
+            }
+
+            searchEl?.addEventListener('input', applyFilter);
+
+            var alertBox = document.getElementById('admin-alert');
+            if (alertBox) {
+                setTimeout(function () {
+                    alertBox.style.transition = 'opacity 0.5s ease';
+                    alertBox.style.opacity = '0';
+                    setTimeout(function () { alertBox.remove(); }, 500);
+                }, 4000);
+            }
+        })();
+    </script>
+}

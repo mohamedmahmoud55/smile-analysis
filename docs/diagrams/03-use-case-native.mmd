@@ -1,0 +1,140 @@
+usecaseDiagram
+    actor SuperAdmin as SA
+    actor Admin as AD
+    actor Doctor as DR
+    actor Staff as ST
+    external "Gummy Smile API" as GSAPI
+    external "X-Ray Analysis API" as XRAPI
+
+    system "SmileAnalysis System" {
+        usecase "Authenticate User" as UC_Auth
+        usecase "Validate Role Access" as UC_Role
+        usecase "Validate Form Input" as UC_ValForm
+        usecase "Persist to Database" as UC_Persist
+        usecase "Upload Images" as UC_Upload
+        usecase "Call External AI API" as UC_CallAI
+        usecase "Check Doctor Availability" as UC_CheckSlot
+
+        usecase "Login to System" as UC_Login
+        usecase "View Dashboard Analytics" as UC_Dash
+        usecase "Manage Users and Roles" as UC_Users
+        usecase "Manage Patients" as UC_Pat
+        usecase "Manage Doctors" as UC_Doc
+        usecase "Manage Staff" as UC_Staff
+        usecase "Manage Appointments" as UC_Apt
+        usecase "Manage Billing and Payments" as UC_Pay
+        usecase "Manage Prescriptions" as UC_Rx
+        usecase "Run Gummy Smile Analysis" as UC_GS
+        usecase "Run X-Ray Analysis" as UC_XR
+
+        usecase "Reset User Password" as UC_ResetPw
+        usecase "Assign Roles to User" as UC_AssignRole
+        usecase "Cancel Appointment" as UC_CancelApt
+        usecase "View Payment Receipt" as UC_Receipt
+        usecase "Download Prescription PDF" as UC_RxPdf
+        usecase "Download Gummy Smile PDF" as UC_GSPdf
+        usecase "Apply Clinician Overrides" as UC_Override
+        usecase "Generate DentalGemma Report" as UC_DentalGemma
+        usecase "View Doctor Schedule" as UC_DocSchedule
+    }
+
+    SA --> UC_Login
+    SA --> UC_Dash
+    SA --> UC_Users
+    SA --> UC_Pat
+    SA --> UC_Doc
+    SA --> UC_Staff
+    SA --> UC_Apt
+    SA --> UC_Pay
+    SA --> UC_Rx
+    SA --> UC_GS
+    SA --> UC_XR
+
+    AD --> UC_Login
+    AD --> UC_Dash
+    AD --> UC_Pat
+    AD --> UC_Doc
+    AD --> UC_Staff
+    AD --> UC_Apt
+    AD --> UC_Pay
+
+    DR --> UC_Login
+    DR --> UC_Pat
+    DR --> UC_DocSchedule
+    DR --> UC_Rx
+    DR --> UC_GS
+    DR --> UC_XR
+
+    ST --> UC_Login
+    ST --> UC_Pat
+    ST --> UC_Apt
+    ST --> UC_Pay
+
+    include: UC_Login --> UC_Auth
+
+    include: UC_Dash --> UC_Auth
+    include: UC_Dash --> UC_Role
+
+    include: UC_Users --> UC_Auth
+    include: UC_Users --> UC_Role
+    include: UC_Users --> UC_ValForm
+    include: UC_Users --> UC_Persist
+
+    include: UC_Pat --> UC_Auth
+    include: UC_Pat --> UC_Role
+    include: UC_Pat --> UC_ValForm
+    include: UC_Pat --> UC_Persist
+
+    include: UC_Doc --> UC_Auth
+    include: UC_Doc --> UC_Role
+    include: UC_Doc --> UC_ValForm
+    include: UC_Doc --> UC_Persist
+
+    include: UC_Staff --> UC_Auth
+    include: UC_Staff --> UC_Role
+    include: UC_Staff --> UC_ValForm
+    include: UC_Staff --> UC_Persist
+
+    include: UC_Apt --> UC_Auth
+    include: UC_Apt --> UC_Role
+    include: UC_Apt --> UC_ValForm
+    include: UC_Apt --> UC_CheckSlot
+    include: UC_Apt --> UC_Persist
+
+    include: UC_Pay --> UC_Auth
+    include: UC_Pay --> UC_Role
+    include: UC_Pay --> UC_ValForm
+    include: UC_Pay --> UC_Persist
+
+    include: UC_Rx --> UC_Auth
+    include: UC_Rx --> UC_Role
+    include: UC_Rx --> UC_ValForm
+    include: UC_Rx --> UC_Persist
+
+    include: UC_GS --> UC_Auth
+    include: UC_GS --> UC_Role
+    include: UC_GS --> UC_Upload
+    include: UC_GS --> UC_CallAI
+    include: UC_GS --> UC_Persist
+
+    include: UC_XR --> UC_Auth
+    include: UC_XR --> UC_Role
+    include: UC_XR --> UC_Upload
+    include: UC_XR --> UC_CallAI
+    include: UC_XR --> UC_Persist
+
+    include: UC_DocSchedule --> UC_Auth
+    include: UC_DocSchedule --> UC_Role
+
+    extend: UC_ResetPw --> UC_Users
+    extend: UC_AssignRole --> UC_Users
+    extend: UC_CancelApt --> UC_Apt
+    extend: UC_Receipt --> UC_Pay
+    extend: UC_RxPdf --> UC_Rx
+    extend: UC_GSPdf --> UC_GS
+    extend: UC_Override --> UC_GS
+    extend: UC_DentalGemma --> UC_XR
+    extend: UC_DocSchedule --> UC_Doc
+
+    dependency: UC_CallAI --> GSAPI
+    dependency: UC_CallAI --> XRAPI

@@ -1,0 +1,125 @@
+@model SmileAnalysisBl.ViewModels.AdminManamentViewModels.ManageRolesViewModel
+@{
+    ViewData["Title"] = "Manage roles";
+    var availableRoles = Model.AllRoles.Where(r => !Model.UserRoles.Contains(r)).ToList();
+}
+
+<div class="cc-page">
+    <div class="mb-4">
+        <a asp-action="Index" class="text-decoration-none small text-secondary"><i class="bi bi-arrow-left me-1"></i>Back to users & roles</a>
+        <h2 class="h4 fw-bold text-dark mt-2 mb-1">Manage roles</h2>
+        <p class="text-secondary small mb-0">@Model.Email — add or remove access roles for this account.</p>
+    </div>
+
+    @if (TempData["SuccessMessage"] is string ok)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @ok
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] is string bad)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @bad
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="row g-4">
+        <div class="col-12 col-lg-6">
+            <div class="cc-bento-card p-4 h-100">
+                <div class="d-flex align-items-center gap-2 mb-4">
+                    <div class="p-2 rounded-3 bg-success-subtle text-success-emphasis">
+                        <i class="bi bi-shield-check fs-5"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h3 class="cc-form-section-title mb-0">Assigned roles</h3>
+                        <p class="small text-muted mb-0 mt-1">@Model.UserRoles.Count role@(Model.UserRoles.Count == 1 ? "" : "s") active</p>
+                    </div>
+                </div>
+
+                @if (Model.UserRoles.Any())
+                {
+                    <ul class="list-group list-group-flush cc-role-list">
+                        @foreach (var role in Model.UserRoles)
+                        {
+                            <li class="list-group-item px-0 d-flex align-items-center justify-content-between gap-3 border-light">
+                                <span class="cc-badge-blue">@role</span>
+                                <form asp-action="RemoveRole" method="post" class="m-0" onsubmit="return confirm('Remove @role from this user?');">
+                                    <input type="hidden" name="userId" value="@Model.UserId" />
+                                    <input type="hidden" name="role" value="@role" />
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-dash-lg me-1"></i>Remove
+                                    </button>
+                                </form>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <div class="text-center text-secondary py-4">
+                        <i class="bi bi-shield-x fs-2 d-block mb-2 opacity-50"></i>
+                        <p class="mb-0 small">No roles assigned yet. Add one from the panel on the right.</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="cc-bento-card p-4 h-100">
+                <div class="d-flex align-items-center gap-2 mb-4">
+                    <div class="p-2 rounded-3 bg-primary-subtle text-primary">
+                        <i class="bi bi-plus-circle fs-5"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <h3 class="cc-form-section-title mb-0">Available roles</h3>
+                        <p class="small text-muted mb-0 mt-1">@availableRoles.Count role@(availableRoles.Count == 1 ? "" : "s") can be added</p>
+                    </div>
+                </div>
+
+                @if (availableRoles.Any())
+                {
+                    <ul class="list-group list-group-flush cc-role-list">
+                        @foreach (var role in availableRoles)
+                        {
+                            <li class="list-group-item px-0 d-flex align-items-center justify-content-between gap-3 border-light">
+                                <span class="cc-badge-muted">@role</span>
+                                <form asp-action="AddRole" method="post" class="m-0">
+                                    <input type="hidden" name="userId" value="@Model.UserId" />
+                                    <input type="hidden" name="role" value="@role" />
+                                    <button type="submit" class="btn btn-sm cc-btn-primary">
+                                        <i class="bi bi-plus-lg me-1"></i>Add
+                                    </button>
+                                </form>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <div class="text-center text-secondary py-4">
+                        <i class="bi bi-check2-circle fs-2 d-block mb-2 opacity-50"></i>
+                        <p class="mb-0 small">This user has all available roles assigned.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="cc-bento-card p-4 mt-4">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <div class="p-2 rounded-3 bg-secondary-subtle text-secondary-emphasis">
+                <i class="bi bi-info-circle fs-5"></i>
+            </div>
+            <h3 class="cc-form-section-title mb-0">Role guide</h3>
+        </div>
+        <ul class="small text-secondary mb-0 ps-3 mt-3">
+            <li class="mb-2"><strong class="text-dark">SuperAdmin</strong> — full system access including user management.</li>
+            <li class="mb-2"><strong class="text-dark">Admin</strong> — manage doctors, staff, and clinic operations.</li>
+            <li class="mb-2"><strong class="text-dark">Staff</strong> — patients, appointments, and front-desk workflows.</li>
+            <li class="mb-0"><strong class="text-dark">Doctor</strong> — own schedule and assigned patients.</li>
+        </ul>
+    </div>
+</div>

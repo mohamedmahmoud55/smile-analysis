@@ -1,0 +1,218 @@
+@using System.Net
+@model SmileAnalysisBl.ViewModels.StaffViewModels.StaffRecordsPageViewModel
+@{
+    ViewData["Title"] = "Clinic staff";
+}
+
+<div class="cc-page">
+    @if (TempData["SuccessMessage"] is string sMsg)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @sMsg
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] is string sErr)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @sErr
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    <div class="cc-topbar d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <form class="cc-search-wrap flex-grow-1" method="get" asp-action="Index" asp-controller="Staff">
+            <i class="bi bi-search"></i>
+            <input type="search" name="q" value="@Model.SearchQuery" class="form-control form-control-sm" placeholder="Search staff records..." autocomplete="off" />
+        </form>
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" class="cc-icon-btn" title="Notifications"><i class="bi bi-bell"></i></button>
+            <button type="button" class="cc-icon-btn" title="Help"><i class="bi bi-question-circle"></i></button>
+            <button type="button" class="cc-icon-btn" title="Settings"><i class="bi bi-gear"></i></button>
+        </div>
+    </div>
+
+    <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-between gap-3 mb-4">
+        <div>
+            <h2 class="h3 fw-bold text-dark mb-1">Clinic staff</h2>
+            <p class="text-secondary mb-0 small">Manage clinic personnel and contact details.</p>
+        </div>
+        @if (User.IsInRole("SuperAdmin"))
+        {
+            <a class="btn cc-btn-primary d-inline-flex align-items-center gap-2" asp-action="Create">
+                <i class="bi bi-person-plus"></i>
+                Add staff member
+            </a>
+        }
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-md-6 col-xl-4">
+            <div class="cc-bento-card p-4 h-100 d-flex flex-column justify-content-between" style="min-height: 8rem;">
+                <span class="cc-bento-label">Total staff</span>
+                <div class="d-flex align-items-end justify-content-between">
+                    <span class="cc-bento-value mb-0">@Model.TotalStaff</span>
+                    <span class="small fw-bold text-primary bg-primary-subtle px-2 py-1 rounded">Roster</span>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-4">
+            <div class="cc-bento-card p-4 h-100 d-flex flex-column justify-content-between" style="min-height: 8rem;">
+                <span class="cc-bento-label">On duty now</span>
+                <div class="d-flex align-items-end justify-content-between">
+                    <span class="cc-bento-value mb-0">@Model.OnDutyNow</span>
+                    <div class="d-flex align-items-center gap-1 text-success small fw-bold">
+                        <span class="rounded-circle bg-success" style="width:0.5rem;height:0.5rem;"></span>
+                        Active
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-4">
+            <div class="cc-bento-card p-4 h-100 d-flex flex-column justify-content-between" style="min-height: 8rem;">
+                <span class="cc-bento-label">Compliance</span>
+                <div class="d-flex align-items-end justify-content-between">
+                    <span class="cc-bento-value mb-0">@Model.CompliancePercent%</span>
+                    <i class="bi bi-patch-check-fill text-success fs-4"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cc-data-card">
+        <div class="cc-card-head px-4 py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <h3 class="h6 fw-bold mb-0 text-dark">Staff registry</h3>
+            <div class="d-flex gap-1">
+                <button type="button" class="cc-icon-btn" disabled title="Filter"><i class="bi bi-filter"></i></button>
+                <button type="button" class="cc-icon-btn" disabled title="Download"><i class="bi bi-download"></i></button>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table cc-table mb-0">
+                <thead>
+                <tr>
+                    <th class="ps-4">Staff ID</th>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Contact</th>
+                    <th>Birth date</th>
+                    <th>Age</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var row in Model.Rows)
+                {
+                    <tr class="cc-table-row border-top border-light">
+                        <td class="ps-4"><span class="cc-pill-id">@row.DisplayId</span></td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="cc-avatar @row.AvatarClass">@row.Initials</span>
+                                <span class="small fw-semibold text-dark">@row.FullName</span>
+                            </div>
+                        </td>
+                        <td><span class="badge rounded-pill @row.RoleBadgeClass">@row.RoleLabel</span></td>
+                        <td class="small text-secondary text-nowrap">
+                            <div>@row.EmailDisplay</div>
+                            <div class="text-muted" style="font-size:0.7rem;">@row.PhoneDisplay</div>
+                        </td>
+                        <td class="small text-secondary text-nowrap">@row.BirthDateDisplay</td>
+                        <td class="small text-secondary text-nowrap">@row.AgeDisplay</td>
+                        <td class="text-end pe-4">
+                            <div class="cc-table-actions d-flex justify-content-end gap-1 align-items-center">
+                                @if (User.IsInRole("SuperAdmin"))
+                                {
+                                    <a class="btn btn-link btn-sm p-1 text-secondary" asp-action="Edit" asp-route-id="@row.Id" title="Edit"><i class="bi bi-pencil"></i></a>
+                                }
+                                else
+                                {
+                                    <span class="btn btn-link btn-sm p-1 text-secondary disabled opacity-50"><i class="bi bi-pencil"></i></span>
+                                }
+                                @if (User.IsInRole("SuperAdmin"))
+                                {
+                                    <button type="button"
+                                            class="btn btn-link btn-sm p-1 text-danger"
+                                            title="Delete"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#deleteStaffModal"
+                                            data-delete-url="@Url.Action("Delete", "Staff", new { id = row.Id })"
+                                            data-item-name="@WebUtility.HtmlEncode(row.FullName)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                }
+                                else
+                                {
+                                    <span class="btn btn-link btn-sm p-1 text-danger disabled opacity-50"><i class="bi bi-trash"></i></span>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Rows.Any())
+                {
+                    <tr>
+                        <td colspan="7" class="text-center text-secondary py-5">No staff match your search.</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        <div class="px-4 py-3 border-top border-light d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <span class="small text-secondary">Showing @(Model.Rows.Count == 0 ? 0 : 1) to @Model.Rows.Count of @Model.MatchingCount entries</span>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-light border" disabled>Previous</button>
+                <span class="btn btn-sm btn-primary">1</span>
+                <button type="button" class="btn btn-sm btn-light border" disabled>Next</button>
+            </div>
+        </div>
+    </div>
+
+    @if (User.IsInRole("SuperAdmin"))
+    {
+        <div class="modal fade" id="deleteStaffModal" tabindex="-1" aria-labelledby="deleteStaffModalTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
+                    <div class="modal-header border-0 border-bottom bg-body-tertiary py-3">
+                        <div class="d-flex align-items-center gap-3 flex-grow-1">
+                            <div class="rounded-3 bg-danger bg-opacity-10 text-danger d-flex align-items-center justify-content-center flex-shrink-0" style="width: 3rem; height: 3rem;">
+                                <i class="bi bi-person-badge fs-4"></i>
+                            </div>
+                            <div>
+                                <h2 class="modal-title h5 fw-bold text-dark mb-0" id="deleteStaffModalTitle">Remove staff member</h2>
+                                <p class="small text-secondary mb-0">This cannot be undone.</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body py-4">
+                        <p class="text-secondary mb-0" id="deleteStaffModalMessage"></p>
+                    </div>
+                    <div class="modal-footer border-0 bg-light bg-opacity-50 gap-2">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                        <form method="post" id="deleteStaffModalForm" class="d-inline m-0">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-danger rounded-pill px-4">Remove from registry</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    @if (User.IsInRole("SuperAdmin"))
+    {
+        <script>
+            document.getElementById('deleteStaffModal')?.addEventListener('show.bs.modal', function (event) {
+                const trigger = event.relatedTarget;
+                if (!trigger) return;
+                const url = trigger.getAttribute('data-delete-url');
+                const name = trigger.getAttribute('data-item-name') || 'this staff member';
+                const form = document.getElementById('deleteStaffModalForm');
+                const msg = document.getElementById('deleteStaffModalMessage');
+                if (form && url) form.setAttribute('action', url);
+                if (msg) msg.textContent = 'Remove "' + name + '" from the staff registry? They will no longer appear in the clinic roster.';
+            });
+        </script>
+    }
+}

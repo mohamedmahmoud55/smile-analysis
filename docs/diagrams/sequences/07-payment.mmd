@@ -1,0 +1,47 @@
+sequenceDiagram
+    actor Staff
+    participant Browser
+    participant MVC as PaymentController
+    participant Svc as PaymentService
+    participant UoW as UnitOfWork
+    participant DB as SQL Server
+
+    Staff->>Browser: Open Payment/Index(patientId)
+    Browser->>MVC: GET Index
+    MVC->>Svc: GetBillingPage(patientId)
+    Svc->>DB: SELECT Patient BillingAccount Payments Appointments
+    Svc-->>MVC: BillingPageViewModel
+    MVC-->>Browser: Financials page
+
+    opt Update billing account
+        Staff->>Browser: Submit SaveBilling form
+        Browser->>MVC: POST SaveBilling
+        MVC->>Svc: TrySaveBilling(model)
+        Svc->>DB: UPDATE PatientBillingAccounts
+        MVC-->>Browser: Redirect with success message
+    end
+
+    Staff->>Browser: Submit RecordPayment form
+    Browser->>MVC: POST RecordPayment
+    MVC->>MVC: Validate ModelState
+    MVC->>Svc: TryRecordPayment(model)
+
+    alt Payment validation failed
+        Svc-->>MVC: error message
+        MVC-->>Browser: Redirect with error
+    else Payment recorded
+        Svc->>UoW: Add Payment entity
+        UoW->>DB: INSERT Payments
+        Svc->>DB: UPDATE billing balance if applicable
+        DB-->>Svc: payment Id
+        Svc-->>MVC: success
+        MVC-->>Browser: Redirect Payment/Index
+        Browser-->>Staff: Updated balance and payment history
+    end
+
+    Staff->>Browser: Open payment receipt
+    Browser->>MVC: GET Receipt(paymentId)
+    MVC->>Svc: GetPaymentReceipt(paymentId)
+    Svc->>DB: SELECT Payment with Patient Appointment
+    Svc-->>MVC: ReceiptViewModel
+    MVC-->>Browser: Receipt view

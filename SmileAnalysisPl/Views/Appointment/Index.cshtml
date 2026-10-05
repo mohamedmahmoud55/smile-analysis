@@ -1,0 +1,281 @@
+@using SmileAnalysisDal.Entities.Enums
+@model IEnumerable<SmileAnalysisBl.ViewModels.AppointmentViewModels.AppointmentListViewModel>
+@{
+    ViewData["Title"] = "Appointments";
+    var appointments = Model.ToList();
+    var today = DateTime.Today;
+    var scheduledToday = appointments.Count(a => a.Status == AppointmentStatus.Scheduled && a.AppointmentTime.Date == today);
+    var upcoming = appointments.Count(a => a.Status == AppointmentStatus.Scheduled && a.AppointmentTime.Date > today);
+    var completed = appointments.Count(a => a.Status == AppointmentStatus.Completed);
+    var cancelled = appointments.Count(a => a.Status == AppointmentStatus.Cancelled);
+
+    string PatientInitials(string name)
+    {
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0) return "?";
+        if (parts.Length == 1) return parts[0][..Math.Min(2, parts[0].Length)].ToUpperInvariant();
+        return $"{parts[0][0]}{parts[^1][0]}".ToUpperInvariant();
+    }
+
+    string AvatarClass(int id) => (id % 5) switch
+    {
+        0 => "cc-avatar-blue",
+        1 => "cc-avatar-emerald",
+        2 => "cc-avatar-purple",
+        3 => "cc-avatar-amber",
+        _ => "cc-avatar-slate"
+    };
+}
+
+<div class="cc-page">
+    @if (TempData["SuccessMessage"] is string msg)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @msg
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] is string err)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @err
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-between gap-3 mb-4">
+        <div>
+            <h2 class="h3 fw-bold text-dark mb-1">Appointments</h2>
+            <p class="text-secondary mb-0 small">View, schedule, and manage patient visits across your clinic.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-secondary btn-sm rounded-pill d-inline-flex align-items-center gap-1" asp-controller="Doctor" asp-action="SchedulePicker">
+                <i class="bi bi-calendar-week"></i>
+                Doctor schedules
+            </a>
+            <a class="btn cc-btn-primary d-inline-flex align-items-center gap-2" asp-action="Create">
+                <i class="bi bi-plus-lg"></i>
+                Schedule appointment
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="cc-bento-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="p-2 rounded-3 bg-warning-subtle text-warning-emphasis">
+                        <i class="bi bi-calendar-check fs-5"></i>
+                    </div>
+                    <span class="small fw-bold text-secondary">Today</span>
+                </div>
+                <p class="cc-bento-label mb-1">Scheduled today</p>
+                <p class="cc-bento-value mb-0">@scheduledToday</p>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="cc-bento-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="p-2 rounded-3 bg-primary-subtle text-primary">
+                        <i class="bi bi-clock-history fs-5"></i>
+                    </div>
+                </div>
+                <p class="cc-bento-label mb-1">Upcoming</p>
+                <p class="cc-bento-value mb-0">@upcoming.ToString("D2")</p>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="cc-bento-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="p-2 rounded-3 bg-success-subtle text-success-emphasis">
+                        <i class="bi bi-check2-circle fs-5"></i>
+                    </div>
+                </div>
+                <p class="cc-bento-label mb-1">Completed</p>
+                <p class="cc-bento-value mb-0">@completed</p>
+            </div>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3">
+            <div class="cc-bento-card p-4 h-100">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="p-2 rounded-3 bg-secondary-subtle text-secondary-emphasis">
+                        <i class="bi bi-x-circle fs-5"></i>
+                    </div>
+                </div>
+                <p class="cc-bento-label mb-1">Cancelled</p>
+                <p class="cc-bento-value mb-0">@cancelled</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="cc-bento-card p-4 mb-4 cc-filter-bar">
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-md-5 col-lg-4">
+                <label class="form-label small fw-semibold text-secondary mb-1" for="appt-search">Search</label>
+                <div class="cc-search-wrap">
+                    <i class="bi bi-search"></i>
+                    <input type="search" id="appt-search" class="form-control form-control-sm" placeholder="Patient or doctor…" autocomplete="off" />
+                </div>
+            </div>
+            <div class="col-6 col-md-3 col-lg-2">
+                <label class="form-label small fw-semibold text-secondary mb-1" for="appt-status">Status</label>
+                <select id="appt-status" class="form-select form-select-sm">
+                    <option value="">All statuses</option>
+                    <option value="Scheduled">Scheduled</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-2 col-lg-2">
+                <label class="form-label small fw-semibold text-secondary mb-1" for="appt-from">From</label>
+                <input type="date" id="appt-from" class="form-control form-control-sm" />
+            </div>
+            <div class="col-6 col-md-2 col-lg-2">
+                <label class="form-label small fw-semibold text-secondary mb-1" for="appt-to">To</label>
+                <input type="date" id="appt-to" class="form-control form-control-sm" />
+            </div>
+            <div class="col-6 col-md-auto">
+                <button type="button" id="appt-clear-filters" class="btn btn-outline-secondary btn-sm">Clear</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="cc-data-card">
+        <div class="cc-card-head px-4 py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <h3 class="h6 fw-bold mb-0 text-dark">All appointments (<span id="appt-visible-count">@appointments.Count</span>)</h3>
+        </div>
+        <div class="table-responsive">
+            <table class="table cc-table mb-0" id="appt-table">
+                <thead>
+                <tr>
+                    <th class="ps-4">When</th>
+                    <th>Patient</th>
+                    <th>Doctor</th>
+                    <th>Duration</th>
+                    <th>Status</th>
+                    <th class="text-end pe-4">Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var a in appointments)
+                {
+                    var isToday = a.AppointmentTime.Date == today;
+                    var dateIso = a.AppointmentTime.ToString("yyyy-MM-dd");
+                    var searchText = $"{a.PatientName} {a.DoctorName}".ToLowerInvariant();
+                    <tr class="cc-table-row border-top border-light appt-row"
+                        data-status="@a.Status"
+                        data-date="@dateIso"
+                        data-search="@searchText">
+                        <td class="ps-4 text-nowrap">
+                            <div class="cc-appt-date">
+                                <span class="cc-appt-date-main">@a.AppointmentTime.ToString("MMM d, yyyy")</span>
+                                <span class="cc-appt-date-sub">
+                                    @a.AppointmentTime.ToString("h:mm tt")
+                                    @if (isToday) { <span class="text-primary fw-semibold">· Today</span> }
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="cc-avatar @AvatarClass(a.Id)">@PatientInitials(a.PatientName)</span>
+                                <span class="small fw-semibold text-dark">@a.PatientName</span>
+                            </div>
+                        </td>
+                        <td class="small text-secondary">@a.DoctorName</td>
+                        <td class="small text-secondary">@a.DurationMinutes min</td>
+                        <td class="text-nowrap">@await Html.PartialAsync("_AppointmentStatusBadge", a.Status)</td>
+                        <td class="text-end pe-4">
+                            <div class="cc-table-actions d-flex justify-content-end gap-1 align-items-center">
+                                @if (a.Status == AppointmentStatus.Scheduled)
+                                {
+                                    <a class="btn btn-link btn-sm p-1 text-primary" asp-action="Edit" asp-route-id="@a.Id" title="Edit appointment"><i class="bi bi-pencil"></i></a>
+                                    <form asp-action="Cancel" asp-route-id="@a.Id" method="post" class="d-inline" onsubmit="return confirm('Cancel this appointment?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-link btn-sm p-1 text-danger" title="Cancel appointment"><i class="bi bi-x-circle"></i></button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <span class="text-muted small">—</span>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!appointments.Any())
+                {
+                    <tr id="appt-empty-row">
+                        <td colspan="6" class="text-center text-secondary py-5">
+                            <i class="bi bi-calendar-x fs-2 d-block mb-2 opacity-50"></i>
+                            No appointments yet.
+                            <a asp-action="Create" class="d-block mt-2 text-decoration-none">Schedule the first appointment</a>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+        @if (appointments.Any())
+        {
+            <div class="px-4 py-3 border-top border-light bg-body-secondary bg-opacity-25">
+                <p class="small text-secondary mb-0" id="appt-filter-summary">Showing @appointments.Count appointment@(appointments.Count == 1 ? "" : "s")</p>
+            </div>
+        }
+    </div>
+</div>
+
+<a class="cc-fab d-md-none" asp-action="Create" title="Schedule appointment"><i class="bi bi-calendar-plus"></i></a>
+
+@section Scripts {
+    <script>
+        (function () {
+            var searchEl = document.getElementById('appt-search');
+            var statusEl = document.getElementById('appt-status');
+            var fromEl = document.getElementById('appt-from');
+            var toEl = document.getElementById('appt-to');
+            var clearBtn = document.getElementById('appt-clear-filters');
+            var rows = document.querySelectorAll('.appt-row');
+            var countEl = document.getElementById('appt-visible-count');
+            var summaryEl = document.getElementById('appt-filter-summary');
+
+            function applyFilters() {
+                var q = (searchEl?.value || '').trim().toLowerCase();
+                var status = statusEl?.value || '';
+                var from = fromEl?.value || '';
+                var to = toEl?.value || '';
+                var visible = 0;
+
+                rows.forEach(function (row) {
+                    var matchSearch = !q || (row.dataset.search || '').indexOf(q) >= 0;
+                    var matchStatus = !status || row.dataset.status === status;
+                    var rowDate = row.dataset.date || '';
+                    var matchFrom = !from || rowDate >= from;
+                    var matchTo = !to || rowDate <= to;
+                    var show = matchSearch && matchStatus && matchFrom && matchTo;
+                    row.classList.toggle('d-none', !show);
+                    if (show) visible++;
+                });
+
+                if (countEl) countEl.textContent = visible;
+                if (summaryEl) {
+                    summaryEl.textContent = visible === 0
+                        ? 'No appointments match your filters.'
+                        : 'Showing ' + visible + ' appointment' + (visible === 1 ? '' : 's');
+                }
+            }
+
+            [searchEl, statusEl, fromEl, toEl].forEach(function (el) {
+                el?.addEventListener('input', applyFilters);
+                el?.addEventListener('change', applyFilters);
+            });
+
+            clearBtn?.addEventListener('click', function () {
+                if (searchEl) searchEl.value = '';
+                if (statusEl) statusEl.value = '';
+                if (fromEl) fromEl.value = '';
+                if (toEl) toEl.value = '';
+                applyFilters();
+            });
+        })();
+    </script>
+}

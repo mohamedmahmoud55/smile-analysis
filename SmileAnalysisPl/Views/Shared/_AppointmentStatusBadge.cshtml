@@ -1,0 +1,12 @@
+@using SmileAnalysisDal.Entities.Enums
+@model AppointmentStatus
+@{
+    var badgeClass = Model switch
+    {
+        AppointmentStatus.Scheduled => "cc-badge-blue",
+        AppointmentStatus.Completed => "cc-badge-emerald",
+        AppointmentStatus.Cancelled => "cc-badge-muted",
+        _ => "cc-badge-muted"
+    };
+}
+<span class="@badgeClass">@Model</span>

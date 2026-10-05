@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmileAnalysisPl", "SmileAnalysisPl\SmileAnalysisPl.csproj", "{62B5AEAE-F9F7-43C6-9174-C6AB17DCD95C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmileAnalysisBl", "SmileAnalysisBl\SmileAnalysisBl.csproj", "{431F817F-A54F-4579-B236-959CD6C8166D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmileAnalysisDal", "SmileAnalysisDal\SmileAnalysisDal.csproj", "{4ED53DA2-561F-45E6-912D-A1E10E5E830E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{62B5AEAE-F9F7-43C6-9174-C6AB17DCD95C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{62B5AEAE-F9F7-43C6-9174-C6AB17DCD95C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{62B5AEAE-F9F7-43C6-9174-C6AB17DCD95C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{62B5AEAE-F9F7-43C6-9174-C6AB17DCD95C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{431F817F-A54F-4579-B236-959CD6C8166D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{431F817F-A54F-4579-B236-959CD6C8166D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{431F817F-A54F-4579-B236-959CD6C8166D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{431F817F-A54F-4579-B236-959CD6C8166D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4ED53DA2-561F-45E6-912D-A1E10E5E830E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4ED53DA2-561F-45E6-912D-A1E10E5E830E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4ED53DA2-561F-45E6-912D-A1E10E5E830E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4ED53DA2-561F-45E6-912D-A1E10E5E830E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
