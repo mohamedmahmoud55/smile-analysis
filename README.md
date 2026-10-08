@@ -29,20 +29,21 @@ The app does not contain a default administrator password. If the initial-admin 
 
 This is a demo/portfolio deployment, not a production clinical system. Do not enter real patient data or upload real clinical images.
 
-1. Create a free ASP.NET Core website and SQL Server database with Somee (or another host that supports .NET 10).
+1. Create a free ASP.NET Core website and SQL Server database with Somee (or another host that supports .NET 10). For Somee, choose **.NET Core (all versions)** for the website and SQL Server 2022 Express for the database; choose **Generate new login** and save the resulting database credentials privately. Somee requires a database name between 7 and 30 characters.
 2. Publish the web project:
 
    ```powershell
    dotnet publish .\SmileAnalysisPl\SmileAnalysisPl.csproj --configuration Release --runtime win-x64 --self-contained false --output .\publish\windows
    ```
 
-3. Upload the contents of `publish\windows` to the website's application root using the host's supported deployment method. This Windows-specific framework-dependent publish avoids bundling Linux/macOS runtimes. Local member profile images and unused oversized images are excluded from publishing.
-4. Configure these settings in the hosting control panel or on the host (never commit credentials to GitHub):
+3. Upload the contents of `publish\windows` to the website's application root using the host's supported deployment method. This Windows-specific framework-dependent publish avoids bundling Linux/macOS runtimes. Local member profile images and unused oversized images are excluded from publishing. If using Somee's File Manager, upload a ZIP of the publish folder and extract it into the website root.
+4. Rename the hosting placeholder `Default.asp` in the website root (for example, to `Default.asp.host-placeholder`) so IIS can route requests to the ASP.NET Core app.
+5. Configure these settings for the website in the hosting control panel or in its private IIS app configuration (never commit credentials to GitHub):
    - `ASPNETCORE_ENVIRONMENT=Production`
    - `ConnectionStrings__DefaultConnection` with the host-provided SQL Server connection string
    - `InitialAdmin__Email`
    - `InitialAdmin__Password` with a unique, strong password
-5. Open the website URL. Startup applies the EF migrations and creates the initial administrator if the database has no users. After the first successful startup, remove the initial-admin password setting from the host configuration.
+6. Open the website URL. Startup applies the EF migrations and creates the initial administrator if the database has no users. After the first successful startup, remove the initial-admin password setting from the host configuration.
 
 The free database and hosting limits make this unsuitable for real clinic operations or patient records.
 
